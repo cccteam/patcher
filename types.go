@@ -85,12 +85,12 @@ func (p PrimaryKey) RowID() string {
 }
 
 func (p PrimaryKey) KeySet() spanner.KeySet {
-	keys := make([]any, 0, len(p.keyParts))
+	keys := make(spanner.Key, 0, len(p.keyParts))
 	for _, v := range p.keyParts {
 		keys = append(keys, v.value)
 	}
 
-	return spanner.Key{keys}
+	return keys
 }
 
 func (p PrimaryKey) Map() map[string]any {

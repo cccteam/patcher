@@ -317,8 +317,8 @@ func (p *SpannerPatcher) jsonUpdateSet(ctx context.Context, txn *spanner.ReadWri
 	patchSetColumns := p.Columns(patchSet, row.Type())
 
 	where := strings.Builder{}
-	for _, key := range pkeys.keyParts {
-		where.WriteString(fmt.Sprintf(" AND %s = @%s", key, strings.ToLower(key.key)))
+	for _, keyPart := range pkeys.keyParts {
+		where.WriteString(fmt.Sprintf(" AND %s = @%s", keyPart.key, strings.ToLower(keyPart.key)))
 	}
 
 	stmt := spanner.NewStatement(fmt.Sprintf(`
@@ -327,8 +327,8 @@ func (p *SpannerPatcher) jsonUpdateSet(ctx context.Context, txn *spanner.ReadWri
 			FROM %s 
 			WHERE %s`, patchSetColumns, tableName, where.String()[5:],
 	))
-	for _, key := range pkeys.keyParts {
-		stmt.Params[strings.ToLower(key.key)] = key.value
+	for _, keyPart := range pkeys.keyParts {
+		stmt.Params[strings.ToLower(keyPart.key)] = keyPart.value
 	}
 
 	oldValues := row.New()
@@ -361,8 +361,8 @@ func (p *SpannerPatcher) jsonDeleteSet(ctx context.Context, txn *spanner.ReadWri
 	patchSetColumns := p.Columns(patchSet, row.Type())
 
 	where := strings.Builder{}
-	for _, key := range pkeys.keyParts {
-		where.WriteString(fmt.Sprintf(" AND %s = @%s", key, strings.ToLower(key.key)))
+	for _, keyPart := range pkeys.keyParts {
+		where.WriteString(fmt.Sprintf(" AND %s = @%s", keyPart.key, strings.ToLower(keyPart.key)))
 	}
 
 	stmt := spanner.NewStatement(fmt.Sprintf(`
@@ -371,8 +371,8 @@ func (p *SpannerPatcher) jsonDeleteSet(ctx context.Context, txn *spanner.ReadWri
 			FROM %s 
 			WHERE %s`, patchSetColumns, tableName, where.String()[5:],
 	))
-	for _, value := range pkeys.keyParts {
-		stmt.Params[strings.ToLower(value.key)] = value.value
+	for _, keyPart := range pkeys.keyParts {
+		stmt.Params[strings.ToLower(keyPart.key)] = keyPart.value
 	}
 
 	oldValues := row.New()
