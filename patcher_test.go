@@ -185,7 +185,8 @@ func TestPatcher_Spanner_Columns(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got := tm.Columns(tt.args.patchSet, tt.args.databaseType); got != tt.want {
+			got, _ := tm.PatchSetColumns(tt.args.patchSet, tt.args.databaseType)
+			if got != tt.want {
 				t.Errorf("Patcher.Columns() = (%v),  want (%v)", got, tt.want)
 			}
 		})
@@ -241,7 +242,8 @@ func TestPatcher_Postgres_Columns(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got := tm.Columns(tt.args.patchSet, tt.args.databaseType); got != tt.want {
+			got, _ := tm.PatchSetColumns(tt.args.patchSet, tt.args.databaseType)
+			if got != tt.want {
 				t.Errorf("Patcher.Columns() = (%v),  want (%v)", got, tt.want)
 			}
 		})

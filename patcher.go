@@ -44,18 +44,24 @@ func (p *patcher) EmptyPatchSet(databaseType any) *patchset.PatchSet {
 	return patchset.NewPatchSet(ps)
 }
 
-// Column returns the database struct tags for the field in databaseType if it exists in patchSet.
-func (p *patcher) Columns(patchSet *patchset.PatchSet, databaseType any) string {
+// PatchSetColumns returns the database struct tags for the field in databaseType if it exists in patchSet.
+func (p *patcher) PatchSetColumns(patchSet *patchset.PatchSet, databaseType any) (string, error) {
+	fields := patchSet.StructFields()
+
+	return p.columns(fields, databaseType)
+}
+
+func (p *patcher) columns(fields []string, databaseType any) (string, error) {
 	fieldTagMapping, err := p.get(databaseType)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	columnEntries := make([]cacheEntry, 0, patchSet.Len())
-	for _, field := range patchSet.Fields() {
+	columnEntries := make([]cacheEntry, 0, len(fields))
+	for _, field := range fields {
 		c, ok := fieldTagMapping[field]
 		if !ok {
-			panic(errors.Newf("field %s not found in struct", field))
+			return "", errors.Newf("field %s not found in struct", field)
 		}
 
 		columnEntries = append(columnEntries, c)
@@ -71,11 +77,11 @@ func (p *patcher) Columns(patchSet *patchset.PatchSet, databaseType any) string 
 
 	switch p.dbType {
 	case spannerdbType:
-		return strings.Join(columns, ", ")
+		return strings.Join(columns, ", "), nil
 	case postgresdbType:
-		return fmt.Sprintf(`"%s"`, strings.Join(columns, `", "`))
+		return fmt.Sprintf(`"%s"`, strings.Join(columns, `", "`)), nil
 	default:
-		panic(errors.Newf("unsupported tag name: %s", p.tagName))
+		return "", errors.Newf("unsupported dbType: %s", p.dbType)
 	}
 }
 
