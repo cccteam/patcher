@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.4](https://github.com/cccteam/patcher/compare/v0.0.3...v0.0.4) (2024-09-23)
+
+
+### Features
+
+* Implement ViewableColumns() to return the database struct tags for the fields that the user has access to view ([#7](https://github.com/cccteam/patcher/issues/7)) ([de65964](https://github.com/cccteam/patcher/commit/de659642410781c3ce315fbba786d6bf583f212b))
+
+
+### Bug Fixes
+
+* Fix bug in TextMarshaler support to handle pointers ([#7](https://github.com/cccteam/patcher/issues/7)) ([de65964](https://github.com/cccteam/patcher/commit/de659642410781c3ce315fbba786d6bf583f212b))
+
 ## [0.0.3](https://github.com/cccteam/patcher/compare/v0.0.2...v0.0.3) (2024-09-17)
 
 
