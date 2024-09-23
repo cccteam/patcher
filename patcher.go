@@ -407,6 +407,10 @@ func match(v, v2 any) (matched bool, err error) {
 		}
 	}
 
+	if reflect.TypeOf(v) != reflect.TypeOf(v2) {
+		return false, errors.Newf("attempted to compare values having a different type, v.(type) = %T, v2.(type) = %T", v, v2)
+	}
+
 	return reflect.DeepEqual(v, v2), nil
 }
 
