@@ -4,8 +4,8 @@ go 1.23.1
 
 require (
 	cloud.google.com/go/spanner v1.67.0
-	github.com/cccteam/ccc v0.2.2
-	github.com/cccteam/httpio v0.4.0
+	github.com/cccteam/ccc v0.2.3
+	github.com/cccteam/httpio v0.4.1
 	github.com/cccteam/spxscan v0.0.3
 	github.com/go-playground/errors/v5 v5.4.0
 )

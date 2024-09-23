@@ -3,6 +3,7 @@ package patcher
 
 import (
 	"bytes"
+	"context"
 	"encoding"
 	"fmt"
 	"iter"
@@ -10,7 +11,10 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/cccteam/ccc"
+	"github.com/cccteam/httpio/columnset"
 	"github.com/cccteam/httpio/patchset"
 	"github.com/go-playground/errors/v5"
 )
@@ -44,18 +48,34 @@ func (p *patcher) EmptyPatchSet(databaseType any) *patchset.PatchSet {
 	return patchset.NewPatchSet(ps)
 }
 
-// Column returns the database struct tags for the field in databaseType if it exists in patchSet.
-func (p *patcher) Columns(patchSet *patchset.PatchSet, databaseType any) string {
-	fieldTagMapping, err := p.get(databaseType)
+// ViewableColumns returns the database struct tags for the fields in databaseType that the user has access to view.
+func (p *patcher) ViewableColumns(ctx context.Context, columnSet columnset.ColumnSet, databaseType any) (string, error) {
+	fileds, err := columnSet.StructFields(ctx)
 	if err != nil {
-		panic(err)
+		return "", errors.Wrap(err, "columnset.ColumnSet.Fields()")
 	}
 
-	columnEntries := make([]cacheEntry, 0, patchSet.Len())
-	for _, field := range patchSet.Fields() {
+	return p.columns(fileds, databaseType)
+}
+
+// PatchSetColumns returns the database struct tags for the field in databaseType if it exists in patchSet.
+func (p *patcher) PatchSetColumns(patchSet *patchset.PatchSet, databaseType any) (string, error) {
+	fields := patchSet.StructFields()
+
+	return p.columns(fields, databaseType)
+}
+
+func (p *patcher) columns(fields []string, databaseType any) (string, error) {
+	fieldTagMapping, err := p.get(databaseType)
+	if err != nil {
+		return "", err
+	}
+
+	columnEntries := make([]cacheEntry, 0, len(fields))
+	for _, field := range fields {
 		c, ok := fieldTagMapping[field]
 		if !ok {
-			panic(errors.Newf("field %s not found in struct", field))
+			return "", errors.Newf("field %s not found in struct", field)
 		}
 
 		columnEntries = append(columnEntries, c)
@@ -71,11 +91,11 @@ func (p *patcher) Columns(patchSet *patchset.PatchSet, databaseType any) string 
 
 	switch p.dbType {
 	case spannerdbType:
-		return strings.Join(columns, ", ")
+		return strings.Join(columns, ", "), nil
 	case postgresdbType:
-		return fmt.Sprintf(`"%s"`, strings.Join(columns, `", "`))
+		return fmt.Sprintf(`"%s"`, strings.Join(columns, `", "`)), nil
 	default:
-		panic(errors.Newf("unsupported tag name: %s", p.tagName))
+		return "", errors.Newf("unsupported dbType: %s", p.dbType)
 	}
 }
 
@@ -350,10 +370,41 @@ func match(v, v2 any) (matched bool, err error) {
 		return matchSlice(t, v2)
 	case []*bool:
 		return matchSlice(t, v2)
-	case encoding.TextMarshaler:
-		return matchTextMarshaler(t, v2)
-	case fmt.Stringer:
-		return matchStringer(t, v2)
+	case time.Time:
+		switch t2 := v2.(type) {
+		case time.Time:
+			return matchTextMarshaler(t, t2)
+		default:
+			return false, errors.Newf("match(): attempted to diff incomparable types, old: %T, new: %T", v, v2)
+		}
+	case *time.Time:
+		switch t2 := v2.(type) {
+		case *time.Time:
+			return matchTextMarshalerPtr(t, t2)
+		default:
+			return false, errors.Newf("match(): attempted to diff incomparable types, old: %T, new: %T", v, v2)
+		}
+	case ccc.UUID:
+		switch t2 := v2.(type) {
+		case ccc.UUID:
+			return matchTextMarshaler(t, t2)
+		default:
+			return false, errors.Newf("match(): attempted to diff incomparable types, old: %T, new: %T", v, v2)
+		}
+	case *ccc.UUID:
+		switch t2 := v2.(type) {
+		case *ccc.UUID:
+			return matchTextMarshalerPtr(t, t2)
+		default:
+			return false, errors.Newf("match(): attempted to diff incomparable types, old: %T, new: %T", v, v2)
+		}
+	case ccc.NullUUID:
+		switch t2 := v2.(type) {
+		case ccc.NullUUID:
+			return matchTextMarshaler(t, t2)
+		default:
+			return false, errors.Newf("match(): attempted to diff incomparable types, old: %T, new: %T", v, v2)
+		}
 	}
 
 	if reflect.TypeOf(v) != reflect.TypeOf(v2) {
@@ -414,36 +465,30 @@ func matchPrimitivePtr[T comparable](v *T, v2 any) (bool, error) {
 	return false, nil
 }
 
-func matchTextMarshaler(v encoding.TextMarshaler, v2 any) (bool, error) {
+func matchTextMarshalerPtr[T encoding.TextMarshaler](v, v2 *T) (bool, error) {
+	if v == nil || v2 == nil {
+		if v == nil && v2 == nil {
+			return true, nil
+		}
+
+		return false, nil
+	}
+
+	return matchTextMarshaler(*v, *v2)
+}
+
+func matchTextMarshaler[T encoding.TextMarshaler](v, v2 T) (bool, error) {
 	vText, err := v.MarshalText()
 	if err != nil {
 		return false, errors.Wrap(err, "encoding.TextMarshaler.MarshalText()")
 	}
 
-	t2, ok := v2.(encoding.TextMarshaler)
-	if !ok {
-		return false, errors.Newf("matchTextMarshaler(): v2 does not implement encoding.TextMarshaler: %T", v2)
-	}
-
-	v2Text, err := t2.MarshalText()
+	v2Text, err := v2.MarshalText()
 	if err != nil {
 		return false, errors.Wrap(err, "encoding.TextMarshaler.MarshalText()")
 	}
 
 	if bytes.Equal(vText, v2Text) {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func matchStringer(v fmt.Stringer, v2 any) (bool, error) {
-	t2, ok := v2.(fmt.Stringer)
-	if !ok {
-		return false, errors.Newf("matchStringer(): v2 does not implement fmt.Stringer: %T", v2)
-	}
-
-	if v.String() == t2.String() {
 		return true, nil
 	}
 

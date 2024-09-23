@@ -2,7 +2,6 @@
 package patcher
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -11,14 +10,6 @@ import (
 )
 
 type Int int
-
-type Stringer int
-
-func (s Stringer) String() string {
-	return fmt.Sprintf("%d", s)
-}
-
-type Stringer2 Stringer
 
 type Marshaler struct {
 	field string
@@ -88,10 +79,6 @@ func Test_match(t *testing.T) {
 
 		{name: "[]time.Time matched", args: args{v: []time.Time{Time, Time2}, v2: []time.Time{Time, Time2}}, wantMatched: true},
 		{name: "[]time.Time not matched", args: args{v: []time.Time{Time, Time2}, v2: []time.Time{Time, Time}}, wantMatched: false},
-
-		{name: "stringer matched", args: args{v: Stringer(1), v2: Stringer(1)}, wantMatched: true},
-		{name: "stringer not matched", args: args{v: Stringer(1), v2: Stringer(4)}, wantMatched: false},
-		{name: "stringer error", args: args{v: Stringer(1), v2: Stringer2(1)}, wantErr: true},
 
 		{name: "different types error", args: args{v: Int(1), v2: 1}, wantErr: true},
 
@@ -185,7 +172,8 @@ func TestPatcher_Spanner_Columns(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got := tm.Columns(tt.args.patchSet, tt.args.databaseType); got != tt.want {
+			got, _ := tm.PatchSetColumns(tt.args.patchSet, tt.args.databaseType)
+			if got != tt.want {
 				t.Errorf("Patcher.Columns() = (%v),  want (%v)", got, tt.want)
 			}
 		})
@@ -241,7 +229,8 @@ func TestPatcher_Postgres_Columns(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got := tm.Columns(tt.args.patchSet, tt.args.databaseType); got != tt.want {
+			got, _ := tm.PatchSetColumns(tt.args.patchSet, tt.args.databaseType)
+			if got != tt.want {
 				t.Errorf("Patcher.Columns() = (%v),  want (%v)", got, tt.want)
 			}
 		})

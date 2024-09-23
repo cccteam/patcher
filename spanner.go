@@ -314,7 +314,10 @@ func (p *SpannerPatcher) jsonInsertSet(patchSet *patchset.PatchSet, row RowStruc
 }
 
 func (p *SpannerPatcher) jsonUpdateSet(ctx context.Context, txn *spanner.ReadWriteTransaction, tableName string, pkeys PrimaryKey, patchSet *patchset.PatchSet, row RowStruct) ([]byte, error) {
-	patchSetColumns := p.Columns(patchSet, row.Type())
+	patchSetColumns, err := p.PatchSetColumns(patchSet, row.Type())
+	if err != nil {
+		return nil, errors.Wrap(err, "SpannerPatcher.Columns()")
+	}
 
 	where := strings.Builder{}
 	for _, keyPart := range pkeys.keyParts {
@@ -358,7 +361,10 @@ func (p *SpannerPatcher) jsonUpdateSet(ctx context.Context, txn *spanner.ReadWri
 }
 
 func (p *SpannerPatcher) jsonDeleteSet(ctx context.Context, txn *spanner.ReadWriteTransaction, tableName string, pkeys PrimaryKey, patchSet *patchset.PatchSet, row RowStruct) ([]byte, error) {
-	patchSetColumns := p.Columns(patchSet, row.Type())
+	patchSetColumns, err := p.PatchSetColumns(patchSet, row.Type())
+	if err != nil {
+		return nil, errors.Wrap(err, "SpannerPatcher.Columns()")
+	}
 
 	where := strings.Builder{}
 	for _, keyPart := range pkeys.keyParts {
