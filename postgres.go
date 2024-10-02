@@ -1,6 +1,10 @@
 package patcher
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/cccteam/ccc/accesstypes"
+)
 
 type PostgresPatcher struct {
 	changeTrackingTable string
@@ -11,7 +15,7 @@ func NewPostgresPatcher() *PostgresPatcher {
 	return &PostgresPatcher{
 		changeTrackingTable: "DataChangeEvents",
 		patcher: &patcher{
-			cache:   make(map[reflect.Type]map[string]cacheEntry),
+			cache:   make(map[reflect.Type]map[accesstypes.Field]cacheEntry),
 			tagName: "db",
 			dbType:  postgresdbType,
 		},

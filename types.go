@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
-	"github.com/cccteam/httpio/patchset"
+	"github.com/cccteam/ccc/accesstypes"
+	"github.com/cccteam/ccc/patchset"
 )
 
 type RowStruct interface {
@@ -46,7 +47,7 @@ type Event struct {
 }
 
 type keyPart struct {
-	key   string
+	key   accesstypes.Field
 	value any
 }
 
@@ -55,7 +56,7 @@ type PrimaryKey struct {
 	keyParts []keyPart
 }
 
-func NewPrimaryKey(key string, value any) PrimaryKey {
+func NewPrimaryKey(key accesstypes.Field, value any) PrimaryKey {
 	return PrimaryKey{
 		keyParts: []keyPart{
 			{key: key, value: value},
@@ -66,7 +67,7 @@ func NewPrimaryKey(key string, value any) PrimaryKey {
 // Add adds an additional column to the primary key creating a composite primary key
 //   - PrimaryKey is immutable.
 //   - Add returns a new PrimaryKey that should be used for all subsequent operations.
-func (p PrimaryKey) Add(key string, value any) PrimaryKey {
+func (p PrimaryKey) Add(key accesstypes.Field, value any) PrimaryKey {
 	p.keyParts = append(p.keyParts, keyPart{
 		key:   key,
 		value: value,
@@ -93,8 +94,8 @@ func (p PrimaryKey) KeySet() spanner.KeySet {
 	return keys
 }
 
-func (p PrimaryKey) Map() map[string]any {
-	pKeyMap := make(map[string]any)
+func (p PrimaryKey) Map() map[accesstypes.Field]any {
+	pKeyMap := make(map[accesstypes.Field]any)
 	for _, keypart := range p.keyParts {
 		pKeyMap[keypart.key] = keypart.value
 	}

@@ -8,8 +8,9 @@ import (
 	"strings"
 
 	"cloud.google.com/go/spanner"
+	"github.com/cccteam/ccc/accesstypes"
+	"github.com/cccteam/ccc/patchset"
 	"github.com/cccteam/httpio"
-	"github.com/cccteam/httpio/patchset"
 	"github.com/cccteam/spxscan"
 	"github.com/go-playground/errors/v5"
 )
@@ -23,7 +24,7 @@ func NewSpannerPatcher() *SpannerPatcher {
 	return &SpannerPatcher{
 		changeTrackingTable: "DataChangeEvents",
 		patcher: &patcher{
-			cache:   make(map[reflect.Type]map[string]cacheEntry),
+			cache:   make(map[reflect.Type]map[accesstypes.Field]cacheEntry),
 			tagName: "spanner",
 			dbType:  spannerdbType,
 		},
@@ -321,7 +322,7 @@ func (p *SpannerPatcher) jsonUpdateSet(ctx context.Context, txn *spanner.ReadWri
 
 	where := strings.Builder{}
 	for _, keyPart := range pkeys.keyParts {
-		where.WriteString(fmt.Sprintf(" AND %s = @%s", keyPart.key, strings.ToLower(keyPart.key)))
+		where.WriteString(fmt.Sprintf(" AND %s = @%s", keyPart.key, strings.ToLower(string(keyPart.key))))
 	}
 
 	stmt := spanner.NewStatement(fmt.Sprintf(`
@@ -331,7 +332,7 @@ func (p *SpannerPatcher) jsonUpdateSet(ctx context.Context, txn *spanner.ReadWri
 			WHERE %s`, patchSetColumns, tableName, where.String()[5:],
 	))
 	for _, keyPart := range pkeys.keyParts {
-		stmt.Params[strings.ToLower(keyPart.key)] = keyPart.value
+		stmt.Params[strings.ToLower(string(keyPart.key))] = keyPart.value
 	}
 
 	oldValues := row.New()
@@ -368,7 +369,7 @@ func (p *SpannerPatcher) jsonDeleteSet(ctx context.Context, txn *spanner.ReadWri
 
 	where := strings.Builder{}
 	for _, keyPart := range pkeys.keyParts {
-		where.WriteString(fmt.Sprintf(" AND %s = @%s", keyPart.key, strings.ToLower(keyPart.key)))
+		where.WriteString(fmt.Sprintf(" AND %s = @%s", keyPart.key, strings.ToLower(string(keyPart.key))))
 	}
 
 	stmt := spanner.NewStatement(fmt.Sprintf(`
@@ -378,7 +379,7 @@ func (p *SpannerPatcher) jsonDeleteSet(ctx context.Context, txn *spanner.ReadWri
 			WHERE %s`, patchSetColumns, tableName, where.String()[5:],
 	))
 	for _, keyPart := range pkeys.keyParts {
-		stmt.Params[strings.ToLower(keyPart.key)] = keyPart.value
+		stmt.Params[strings.ToLower(string(keyPart.key))] = keyPart.value
 	}
 
 	oldValues := row.New()

@@ -14,8 +14,9 @@ import (
 	"time"
 
 	"github.com/cccteam/ccc"
-	"github.com/cccteam/httpio/columnset"
-	"github.com/cccteam/httpio/patchset"
+	"github.com/cccteam/ccc/accesstypes"
+	"github.com/cccteam/ccc/columnset"
+	"github.com/cccteam/ccc/patchset"
 	"github.com/go-playground/errors/v5"
 )
 
@@ -31,7 +32,7 @@ type patcher struct {
 	dbType  dbType
 
 	mu    sync.RWMutex
-	cache map[reflect.Type]map[string]cacheEntry
+	cache map[reflect.Type]map[accesstypes.Field]cacheEntry
 }
 
 func (p *patcher) EmptyPatchSet(databaseType any) *patchset.PatchSet {
@@ -40,7 +41,7 @@ func (p *patcher) EmptyPatchSet(databaseType any) *patchset.PatchSet {
 		panic(err)
 	}
 
-	ps := make(map[string]any, len(fieldTagMapping))
+	ps := make(map[accesstypes.Field]any, len(fieldTagMapping))
 	for field := range fieldTagMapping {
 		ps[field] = nil
 	}
@@ -65,7 +66,7 @@ func (p *patcher) PatchSetColumns(patchSet *patchset.PatchSet, databaseType any)
 	return p.columns(fields, databaseType)
 }
 
-func (p *patcher) columns(fields []string, databaseType any) (string, error) {
+func (p *patcher) columns(fields []accesstypes.Field, databaseType any) (string, error) {
 	fieldTagMapping, err := p.get(databaseType)
 	if err != nil {
 		return "", err
@@ -123,7 +124,7 @@ func (p *patcher) Resolve(pkeys PrimaryKey, patchSet *patchset.PatchSet, databas
 }
 
 // Diff returns a map of fields that have changed between old and patchSet.
-func (p *patcher) Diff(old any, patchSet *patchset.PatchSet) (map[string]DiffElem, error) {
+func (p *patcher) Diff(old any, patchSet *patchset.PatchSet) (map[accesstypes.Field]DiffElem, error) {
 	oldValue := reflect.ValueOf(old)
 	oldType := reflect.TypeOf(old)
 
@@ -139,12 +140,12 @@ func (p *patcher) Diff(old any, patchSet *patchset.PatchSet) (map[string]DiffEle
 		return nil, errors.Newf("Patcher.Diff(): old must be of kind struct, found kind %s", kind.String())
 	}
 
-	oldMap := map[string]any{}
+	oldMap := map[accesstypes.Field]any{}
 	for _, field := range reflect.VisibleFields(oldType) {
-		oldMap[field.Name] = oldValue.FieldByName(field.Name).Interface()
+		oldMap[accesstypes.Field(field.Name)] = oldValue.FieldByName(field.Name).Interface()
 	}
 
-	diff := map[string]DiffElem{}
+	diff := map[accesstypes.Field]DiffElem{}
 	for field, newV := range patchSet.Data() {
 		oldV, foundInOld := oldMap[field]
 		if !foundInOld {
@@ -193,7 +194,7 @@ func (p *patcher) deleteChangeSet(old any) (map[string]DiffElem, error) {
 	return oldMap, nil
 }
 
-func (p *patcher) get(v any) (map[string]cacheEntry, error) {
+func (p *patcher) get(v any) (map[accesstypes.Field]cacheEntry, error) {
 	p.mu.RLock()
 
 	t := reflect.TypeOf(v)
@@ -239,8 +240,8 @@ func all[Map ~map[K]V, K comparable, V any](maps ...Map) iter.Seq2[K, V] {
 	}
 }
 
-func structTags(t reflect.Type, key string) map[string]cacheEntry {
-	tagMap := make(map[string]cacheEntry)
+func structTags(t reflect.Type, key string) map[accesstypes.Field]cacheEntry {
+	tagMap := make(map[accesstypes.Field]cacheEntry)
 	for i := range t.NumField() {
 		field := t.Field(i)
 		tag := field.Tag.Get(key)
@@ -250,7 +251,7 @@ func structTags(t reflect.Type, key string) map[string]cacheEntry {
 			continue
 		}
 
-		tagMap[field.Name] = cacheEntry{index: i, tag: list[0]}
+		tagMap[accesstypes.Field(field.Name)] = cacheEntry{index: i, tag: list[0]}
 	}
 
 	return tagMap
