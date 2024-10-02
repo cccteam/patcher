@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/cccteam/ccc"
-	"github.com/cccteam/httpio/patchset"
+	"github.com/cccteam/ccc/accesstypes"
+	"github.com/cccteam/ccc/patchset"
 )
 
 type Int int
@@ -147,7 +148,7 @@ func TestPatcher_Spanner_Columns(t *testing.T) {
 		{
 			name: "multiple fields in patchSet",
 			args: args{
-				patchSet: patchset.NewPatchSet(map[string]any{
+				patchSet: patchset.NewPatchSet(map[accesstypes.Field]any{
 					"Field2": "apple",
 					"Field3": 10,
 				}),
@@ -158,7 +159,7 @@ func TestPatcher_Spanner_Columns(t *testing.T) {
 		{
 			name: "multiple fields not in sorted order",
 			args: args{
-				patchSet: patchset.NewPatchSet(map[string]any{
+				patchSet: patchset.NewPatchSet(map[accesstypes.Field]any{
 					"Field4": "apple",
 					"Field5": "bannana",
 				}),
@@ -204,7 +205,7 @@ func TestPatcher_Postgres_Columns(t *testing.T) {
 		{
 			name: "multiple fields in patchSet",
 			args: args{
-				patchSet: patchset.NewPatchSet(map[string]any{
+				patchSet: patchset.NewPatchSet(map[accesstypes.Field]any{
 					"Field2": "apple",
 					"Field3": 10,
 				}),
@@ -215,7 +216,7 @@ func TestPatcher_Postgres_Columns(t *testing.T) {
 		{
 			name: "multiple fields not in sorted order",
 			args: args{
-				patchSet: patchset.NewPatchSet(map[string]any{
+				patchSet: patchset.NewPatchSet(map[accesstypes.Field]any{
 					"Field4": "apple",
 					"Field5": "bannana",
 				}),

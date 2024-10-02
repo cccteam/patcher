@@ -4,7 +4,10 @@ go 1.23.1
 
 require (
 	cloud.google.com/go/spanner v1.67.0
-	github.com/cccteam/ccc v0.2.3
+	github.com/cccteam/ccc v0.2.7
+	github.com/cccteam/ccc/accesstypes v0.2.5
+	github.com/cccteam/ccc/columnset v0.0.3
+	github.com/cccteam/ccc/patchset v0.1.0
 	github.com/cccteam/httpio v0.4.1
 	github.com/cccteam/spxscan v0.0.3
 	github.com/go-playground/errors/v5 v5.4.0
@@ -20,6 +23,7 @@ require (
 	cloud.google.com/go/longrunning v0.5.11 // indirect
 	contrib.go.opencensus.io/exporter/stackdriver v0.13.14 // indirect
 	github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.5.0 // indirect
+	github.com/cccteam/ccc/resourceset v0.1.0 // indirect
 	github.com/cccteam/logger v0.1.12 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
