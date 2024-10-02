@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.0](https://github.com/cccteam/patcher/compare/v0.0.4...v0.1.0) (2024-10-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* Refactor to use new types from accesstypes ([#10](https://github.com/cccteam/patcher/issues/10))
+
+### Code Refactoring
+
+* Refactor to use new types from accesstypes ([#10](https://github.com/cccteam/patcher/issues/10)) ([7c11381](https://github.com/cccteam/patcher/commit/7c11381205692064ec4275ecf7d80fe13e5e7906))
+
 ## [0.0.4](https://github.com/cccteam/patcher/compare/v0.0.3...v0.0.4) (2024-09-23)
 
 
