@@ -244,7 +244,7 @@ func structTags(t reflect.Type, key string) map[accesstypes.Field]cacheEntry {
 	tagMap := make(map[accesstypes.Field]cacheEntry)
 	for i := range t.NumField() {
 		field := t.Field(i)
-		tag := field.Tag.Get(string(key))
+		tag := field.Tag.Get(key)
 
 		list := strings.Split(tag, ",")
 		if len(list) == 0 || list[0] == "" || list[0] == "-" {
