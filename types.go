@@ -32,15 +32,15 @@ func (r *row[T]) Type() any {
 }
 
 type DataChangeEvent struct {
-	TableName   string    `spanner:"TableName"`
-	RowID       string    `spanner:"RowId"`
-	EventTime   time.Time `spanner:"EventTime"`
-	EventSource string    `spanner:"EventSource"`
-	ChangeSet   string    `spanner:"ChangeSet"`
+	TableName   accesstypes.Resource `spanner:"TableName"`
+	RowID       string               `spanner:"RowId"`
+	EventTime   time.Time            `spanner:"EventTime"`
+	EventSource string               `spanner:"EventSource"`
+	ChangeSet   string               `spanner:"ChangeSet"`
 }
 
 type Event struct {
-	TableName   string
+	TableName   accesstypes.Resource
 	RowStruct   RowStruct
 	PrimaryKeys PrimaryKey
 	PatchSet    *patchset.PatchSet
