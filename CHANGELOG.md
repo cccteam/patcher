@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/cccteam/patcher/compare/v0.1.0...v0.2.0) (2024-10-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* Switch TableName type to Resource ([#12](https://github.com/cccteam/patcher/issues/12))
+
+### Code Refactoring
+
+* Switch TableName type to Resource ([#12](https://github.com/cccteam/patcher/issues/12)) ([1b72ff3](https://github.com/cccteam/patcher/commit/1b72ff31508040701e2d9e9151e99a3259250d1f))
+
 ## [0.1.0](https://github.com/cccteam/patcher/compare/v0.0.4...v0.1.0) (2024-10-02)
 
 
