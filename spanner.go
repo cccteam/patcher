@@ -314,7 +314,9 @@ func (p *SpannerPatcher) jsonInsertSet(patchSet *patchset.PatchSet, row RowStruc
 	return jsonBytes, nil
 }
 
-func (p *SpannerPatcher) jsonUpdateSet(ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, pkeys PrimaryKey, patchSet *patchset.PatchSet, row RowStruct) ([]byte, error) {
+func (p *SpannerPatcher) jsonUpdateSet(
+	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, pkeys PrimaryKey, patchSet *patchset.PatchSet, row RowStruct) ([]byte, error,
+) {
 	patchSetColumns, err := p.PatchSetColumns(patchSet, row.Type())
 	if err != nil {
 		return nil, errors.Wrap(err, "SpannerPatcher.Columns()")
@@ -361,7 +363,9 @@ func (p *SpannerPatcher) jsonUpdateSet(ctx context.Context, txn *spanner.ReadWri
 	return jsonBytes, nil
 }
 
-func (p *SpannerPatcher) jsonDeleteSet(ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, pkeys PrimaryKey, patchSet *patchset.PatchSet, row RowStruct) ([]byte, error) {
+func (p *SpannerPatcher) jsonDeleteSet(
+	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, pkeys PrimaryKey, patchSet *patchset.PatchSet, row RowStruct,
+) ([]byte, error) {
 	patchSetColumns, err := p.PatchSetColumns(patchSet, row.Type())
 	if err != nil {
 		return nil, errors.Wrap(err, "SpannerPatcher.Columns()")
