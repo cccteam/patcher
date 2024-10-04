@@ -98,7 +98,7 @@ func (p *SpannerPatcher) RowInsertMutation(event *Event) (*spanner.Mutation, err
 	if err != nil {
 		return nil, errors.Wrap(err, "Resolve()")
 	}
-	mutation := spanner.InsertMap(event.TableName, patch)
+	mutation := spanner.InsertMap(string(event.TableName), patch)
 
 	return mutation, nil
 }
@@ -108,13 +108,13 @@ func (p *SpannerPatcher) RowUpdateMutation(event *Event) (*spanner.Mutation, err
 	if err != nil {
 		return nil, errors.Wrap(err, "Resolve()")
 	}
-	mutation := spanner.UpdateMap(event.TableName, patch)
+	mutation := spanner.UpdateMap(string(event.TableName), patch)
 
 	return mutation, nil
 }
 
 func (p *SpannerPatcher) RowDeleteMutation(event *Event) (*spanner.Mutation, error) {
-	mutation := spanner.Delete(event.TableName, event.PrimaryKeys.KeySet())
+	mutation := spanner.Delete(string(event.TableName), event.PrimaryKeys.KeySet())
 
 	return mutation, nil
 }
@@ -314,7 +314,9 @@ func (p *SpannerPatcher) jsonInsertSet(patchSet *patchset.PatchSet, row RowStruc
 	return jsonBytes, nil
 }
 
-func (p *SpannerPatcher) jsonUpdateSet(ctx context.Context, txn *spanner.ReadWriteTransaction, tableName string, pkeys PrimaryKey, patchSet *patchset.PatchSet, row RowStruct) ([]byte, error) {
+func (p *SpannerPatcher) jsonUpdateSet(
+	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, pkeys PrimaryKey, patchSet *patchset.PatchSet, row RowStruct) ([]byte, error,
+) {
 	patchSetColumns, err := p.PatchSetColumns(patchSet, row.Type())
 	if err != nil {
 		return nil, errors.Wrap(err, "SpannerPatcher.Columns()")
@@ -361,7 +363,9 @@ func (p *SpannerPatcher) jsonUpdateSet(ctx context.Context, txn *spanner.ReadWri
 	return jsonBytes, nil
 }
 
-func (p *SpannerPatcher) jsonDeleteSet(ctx context.Context, txn *spanner.ReadWriteTransaction, tableName string, pkeys PrimaryKey, patchSet *patchset.PatchSet, row RowStruct) ([]byte, error) {
+func (p *SpannerPatcher) jsonDeleteSet(
+	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, pkeys PrimaryKey, patchSet *patchset.PatchSet, row RowStruct,
+) ([]byte, error) {
 	patchSetColumns, err := p.PatchSetColumns(patchSet, row.Type())
 	if err != nil {
 		return nil, errors.Wrap(err, "SpannerPatcher.Columns()")
