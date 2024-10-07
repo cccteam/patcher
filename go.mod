@@ -3,12 +3,12 @@ module github.com/cccteam/patcher
 go 1.23.1
 
 require (
-	cloud.google.com/go/spanner v1.68.0
-	github.com/cccteam/ccc v0.2.7
-	github.com/cccteam/ccc/accesstypes v0.2.5
+	cloud.google.com/go/spanner v1.69.0
+	github.com/cccteam/ccc v0.2.8
+	github.com/cccteam/ccc/accesstypes v0.3.0
 	github.com/cccteam/ccc/columnset v0.0.3
 	github.com/cccteam/ccc/patchset v0.1.0
-	github.com/cccteam/httpio v0.4.1
+	github.com/cccteam/httpio v0.5.0
 	github.com/cccteam/spxscan v0.0.3
 	github.com/go-playground/errors/v5 v5.4.0
 )
