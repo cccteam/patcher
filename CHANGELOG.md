@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/cccteam/patcher/compare/v0.2.0...v0.3.0) (2024-10-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove PatchSet from Delete mutations ([#16](https://github.com/cccteam/patcher/issues/16))
+
+### Bug Fixes
+
+* Remove PatchSet from Delete mutations ([#16](https://github.com/cccteam/patcher/issues/16)) ([84d941e](https://github.com/cccteam/patcher/commit/84d941e3d0b1abba3960226f591978ce4ad3c0e8))
+
 ## [0.2.0](https://github.com/cccteam/patcher/compare/v0.1.0...v0.2.0) (2024-10-04)
 
 
