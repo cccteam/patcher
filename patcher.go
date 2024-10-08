@@ -7,7 +7,9 @@ import (
 	"encoding"
 	"fmt"
 	"iter"
+	"maps"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -35,20 +37,6 @@ type patcher struct {
 	cache map[reflect.Type]map[accesstypes.Field]cacheEntry
 }
 
-func (p *patcher) EmptyPatchSet(databaseType any) *patchset.PatchSet {
-	fieldTagMapping, err := p.get(databaseType)
-	if err != nil {
-		panic(err)
-	}
-
-	ps := make(map[accesstypes.Field]any, len(fieldTagMapping))
-	for field := range fieldTagMapping {
-		ps[field] = nil
-	}
-
-	return patchset.NewPatchSet(ps)
-}
-
 // ViewableColumns returns the database struct tags for the fields in databaseType that the user has access to view.
 func (p *patcher) ViewableColumns(ctx context.Context, columnSet columnset.ColumnSet, databaseType any) (string, error) {
 	fileds, err := columnSet.StructFields(ctx)
@@ -64,6 +52,16 @@ func (p *patcher) PatchSetColumns(patchSet *patchset.PatchSet, databaseType any)
 	fields := patchSet.StructFields()
 
 	return p.columns(fields, databaseType)
+}
+
+// AllColumns returns the database struct tags for all fields in databaseType.
+func (p *patcher) AllColumns(databaseType any) (string, error) {
+	fieldTagMapping, err := p.get(databaseType)
+	if err != nil {
+		panic(err)
+	}
+
+	return p.columns(slices.Collect(maps.Keys(fieldTagMapping)), databaseType)
 }
 
 func (p *patcher) columns(fields []accesstypes.Field, databaseType any) (string, error) {
@@ -228,9 +226,9 @@ func (p *patcher) get(v any) (map[accesstypes.Field]cacheEntry, error) {
 // all returns an iterator over key-value pairs from m.
 //   - all is a similar to maps.All but it takes a variadic
 //   - duplicate keys will not be deduped and will be yielded once for each duplication
-func all[Map ~map[K]V, K comparable, V any](maps ...Map) iter.Seq2[K, V] {
+func all[Map ~map[K]V, K comparable, V any](mapSlice ...Map) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
-		for _, m := range maps {
+		for _, m := range mapSlice {
 			for k, v := range m {
 				if !yield(k, v) {
 					return

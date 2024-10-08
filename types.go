@@ -19,8 +19,8 @@ type row[T any] struct {
 	r *T
 }
 
-func NewRowStruct[T any](tableStruct T) RowStruct {
-	return &row[T]{r: &tableStruct}
+func NewRowStruct[T any](rowStruct T) RowStruct {
+	return &row[T]{r: &rowStruct}
 }
 
 func (r *row[T]) New() any {
@@ -44,6 +44,12 @@ type Event struct {
 	RowStruct   RowStruct
 	PrimaryKeys PrimaryKey
 	PatchSet    *patchset.PatchSet
+}
+
+type DeleteEvent struct {
+	TableName   accesstypes.Resource
+	RowStruct   RowStruct
+	PrimaryKeys PrimaryKey
 }
 
 type keyPart struct {
