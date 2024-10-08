@@ -7,7 +7,9 @@ import (
 	"encoding"
 	"fmt"
 	"iter"
+	"maps"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -64,6 +66,16 @@ func (p *patcher) PatchSetColumns(patchSet *patchset.PatchSet, databaseType any)
 	fields := patchSet.StructFields()
 
 	return p.columns(fields, databaseType)
+}
+
+// AllColumns returns the database struct tags for all fields in databaseType.
+func (p *patcher) AllColumns(databaseType any) (string, error) {
+	fieldTagMapping, err := p.get(databaseType)
+	if err != nil {
+		panic(err)
+	}
+
+	return p.columns(slices.Collect(maps.Keys(fieldTagMapping)), databaseType)
 }
 
 func (p *patcher) columns(fields []accesstypes.Field, databaseType any) (string, error) {

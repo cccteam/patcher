@@ -73,7 +73,7 @@ func (p *SpannerPatcher) Update(ctx context.Context, s *spanner.Client, event *E
 	return nil
 }
 
-func (p *SpannerPatcher) Delete(ctx context.Context, s *spanner.Client, event *Event) error {
+func (p *SpannerPatcher) Delete(ctx context.Context, s *spanner.Client, event *DeleteEvent) error {
 	mutations := []*spanner.Mutation{}
 
 	mutation, err := p.RowDeleteMutation(event)
@@ -113,7 +113,7 @@ func (p *SpannerPatcher) RowUpdateMutation(event *Event) (*spanner.Mutation, err
 	return mutation, nil
 }
 
-func (p *SpannerPatcher) RowDeleteMutation(event *Event) (*spanner.Mutation, error) {
+func (p *SpannerPatcher) RowDeleteMutation(event *DeleteEvent) (*spanner.Mutation, error) {
 	mutation := spanner.Delete(string(event.TableName), event.PrimaryKeys.KeySet())
 
 	return mutation, nil
@@ -157,7 +157,7 @@ func (p *SpannerPatcher) UpdateWithDataChangeEvent(ctx context.Context, s *spann
 	return nil
 }
 
-func (p *SpannerPatcher) DeleteWithDataChangeEvent(ctx context.Context, s *spanner.Client, eventSource string, event *Event) error {
+func (p *SpannerPatcher) DeleteWithDataChangeEvent(ctx context.Context, s *spanner.Client, eventSource string, event *DeleteEvent) error {
 	if _, err := s.ReadWriteTransaction(ctx, func(_ context.Context, txn *spanner.ReadWriteTransaction) error {
 		mutations, err := p.RowAndDataChangeEventDeleteMutations(ctx, txn, eventSource, event)
 		if err != nil {
@@ -212,7 +212,7 @@ func (p *SpannerPatcher) RowAndDataChangeEventUpdateMutations(ctx context.Contex
 	return mutations, nil
 }
 
-func (p *SpannerPatcher) RowAndDataChangeEventDeleteMutations(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, event *Event) ([]*spanner.Mutation, error) {
+func (p *SpannerPatcher) RowAndDataChangeEventDeleteMutations(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, event *DeleteEvent) ([]*spanner.Mutation, error) {
 	mutations := []*spanner.Mutation{}
 
 	mutation, err := p.RowDeleteMutation(event)
@@ -274,8 +274,8 @@ func (p *SpannerPatcher) dataChangeEventUpdateMutation(ctx context.Context, txn 
 	return mutation, nil
 }
 
-func (p *SpannerPatcher) dataChangeEventDeleteMutation(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, event *Event) (*spanner.Mutation, error) {
-	jsonChangeSet, err := p.jsonDeleteSet(ctx, txn, event.TableName, event.PrimaryKeys, event.PatchSet, event.RowStruct)
+func (p *SpannerPatcher) dataChangeEventDeleteMutation(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, event *DeleteEvent) (*spanner.Mutation, error) {
+	jsonChangeSet, err := p.jsonDeleteSet(ctx, txn, event.TableName, event.PrimaryKeys, event.RowStruct)
 	if err != nil {
 		return nil, err
 	}
@@ -364,9 +364,9 @@ func (p *SpannerPatcher) jsonUpdateSet(
 }
 
 func (p *SpannerPatcher) jsonDeleteSet(
-	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, pkeys PrimaryKey, patchSet *patchset.PatchSet, row RowStruct,
+	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, pkeys PrimaryKey, row RowStruct,
 ) ([]byte, error) {
-	patchSetColumns, err := p.PatchSetColumns(patchSet, row.Type())
+	columns, err := p.AllColumns(row.Type())
 	if err != nil {
 		return nil, errors.Wrap(err, "SpannerPatcher.Columns()")
 	}
@@ -380,7 +380,7 @@ func (p *SpannerPatcher) jsonDeleteSet(
 			SELECT
 				%s
 			FROM %s 
-			WHERE %s`, patchSetColumns, tableName, where.String()[5:],
+			WHERE %s`, columns, tableName, where.String()[5:],
 	))
 	for _, keyPart := range pkeys.keyParts {
 		stmt.Params[strings.ToLower(string(keyPart.key))] = keyPart.value
