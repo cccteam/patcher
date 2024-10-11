@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0](https://github.com/cccteam/patcher/compare/v0.3.0...v0.4.0) (2024-10-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* Buffer mutations internaly instead of returning them ([#18](https://github.com/cccteam/patcher/issues/18))
+
+### Features
+
+* Buffer mutations internaly instead of returning them ([#18](https://github.com/cccteam/patcher/issues/18)) ([724e50e](https://github.com/cccteam/patcher/commit/724e50e6d3023ab66ceb1720e639a4d21760de71))
+
 ## [0.3.0](https://github.com/cccteam/patcher/compare/v0.2.0...v0.3.0) (2024-10-08)
 
 
