@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.5.0](https://github.com/cccteam/patcher/compare/v0.4.0...v0.5.0) (2024-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* Refactor public method names ([#20](https://github.com/cccteam/patcher/issues/20))
+
+### Features
+
+* Add InsertOrUpdate support ([#20](https://github.com/cccteam/patcher/issues/20)) ([a0e1747](https://github.com/cccteam/patcher/commit/a0e17471f80f85347f7265065c3d65e14f0a8211))
+
+
+### Dependencies
+
+* Go dependency update ([#22](https://github.com/cccteam/patcher/issues/22)) ([239005f](https://github.com/cccteam/patcher/commit/239005f8990f5a02b2b93dd0be085e641d087950))
+
+
+### Code Refactoring
+
+* Refactor public method names ([#20](https://github.com/cccteam/patcher/issues/20)) ([a0e1747](https://github.com/cccteam/patcher/commit/a0e17471f80f85347f7265065c3d65e14f0a8211))
+
 ## [0.4.0](https://github.com/cccteam/patcher/compare/v0.3.0...v0.4.0) (2024-10-11)
 
 
