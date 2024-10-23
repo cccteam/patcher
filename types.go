@@ -62,6 +62,18 @@ type PrimaryKey struct {
 	keyParts []keyPart
 }
 
+func NewPrimaryKeyFromMap(keyMap map[accesstypes.Field]any) PrimaryKey {
+	pKey := PrimaryKey{}
+	for k, v := range keyMap {
+		pKey.keyParts = append(pKey.keyParts, keyPart{
+			key:   k,
+			value: v,
+		})
+	}
+
+	return pKey
+}
+
 func NewPrimaryKey(key accesstypes.Field, value any) PrimaryKey {
 	return PrimaryKey{
 		keyParts: []keyPart{
