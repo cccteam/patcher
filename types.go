@@ -39,14 +39,14 @@ type DataChangeEvent struct {
 	ChangeSet   string               `spanner:"ChangeSet"`
 }
 
-type Event struct {
+type Mutation struct {
 	TableName   accesstypes.Resource
 	RowStruct   RowStruct
 	PrimaryKeys PrimaryKey
 	PatchSet    *patchset.PatchSet
 }
 
-type DeleteEvent struct {
+type DeleteMutation struct {
 	TableName   accesstypes.Resource
 	RowStruct   RowStruct
 	PrimaryKeys PrimaryKey
