@@ -8,7 +8,7 @@ require (
 	github.com/cccteam/ccc/accesstypes v0.4.1
 	github.com/cccteam/ccc/columnset v0.0.5
 	github.com/cccteam/ccc/patchset v0.2.2
-	github.com/cccteam/httpio v0.6.1
+	github.com/cccteam/httpio v0.6.2
 	github.com/cccteam/spxscan v0.0.3
 	github.com/go-playground/errors/v5 v5.4.0
 )
