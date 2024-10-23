@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/cccteam/patcher/compare/v0.5.0...v0.5.1) (2024-10-23)
+
+
+### Features
+
+* New constructor for loading key map ([#24](https://github.com/cccteam/patcher/issues/24)) ([3a227ca](https://github.com/cccteam/patcher/commit/3a227ca58fe7b9dc54a7b3fa5245561b84eec529))
+
 ## [0.5.0](https://github.com/cccteam/patcher/compare/v0.4.0...v0.5.0) (2024-10-14)
 
 
