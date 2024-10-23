@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/cccteam/patcher/compare/v0.5.1...v0.6.0) (2024-10-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* Changed types `Event` -> `Mutation` and `DeleteEvent` -> `DeleteMutation` ([#26](https://github.com/cccteam/patcher/issues/26))
+
+### Code Refactoring
+
+* Changed types `Event` -&gt; `Mutation` and `DeleteEvent` -&gt; `DeleteMutation` ([#26](https://github.com/cccteam/patcher/issues/26)) ([763b954](https://github.com/cccteam/patcher/commit/763b95415b1d859631d26b09ed8f9a6a94707a94))
+* Refactor event types to migration types ([#26](https://github.com/cccteam/patcher/issues/26)) ([763b954](https://github.com/cccteam/patcher/commit/763b95415b1d859631d26b09ed8f9a6a94707a94))
+
 ## [0.5.1](https://github.com/cccteam/patcher/compare/v0.5.0...v0.5.1) (2024-10-23)
 
 
