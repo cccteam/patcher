@@ -1,6 +1,6 @@
 module github.com/cccteam/patcher
 
-go 1.23.1
+go 1.23.2
 
 require (
 	cloud.google.com/go/spanner v1.70.0
@@ -9,19 +9,20 @@ require (
 	github.com/cccteam/ccc/columnset v0.0.5
 	github.com/cccteam/ccc/patchset v0.2.2
 	github.com/cccteam/httpio v0.6.2
+	github.com/cccteam/session v0.4.0
 	github.com/cccteam/spxscan v0.0.3
 	github.com/go-playground/errors/v5 v5.4.0
 )
 
 require (
-	cel.dev/expr v0.17.0 // indirect
+	cel.dev/expr v0.18.0 // indirect
 	cloud.google.com/go v0.116.0 // indirect
 	cloud.google.com/go/auth v0.9.9 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	cloud.google.com/go/logging v1.12.0 // indirect
-	cloud.google.com/go/longrunning v0.6.1 // indirect
-	cloud.google.com/go/monitoring v1.21.1 // indirect
+	cloud.google.com/go/longrunning v0.6.2 // indirect
+	cloud.google.com/go/monitoring v1.21.2 // indirect
 	contrib.go.opencensus.io/exporter/stackdriver v0.13.14 // indirect
 	github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.5.1 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.24.3 // indirect
