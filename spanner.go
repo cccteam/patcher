@@ -371,7 +371,7 @@ func (p *SpannerPatcher) jsonUpdateSet(
 	oldValues := row.New()
 	if err := spxscan.Get(ctx, txn, oldValues, stmt); err != nil {
 		if errors.Is(err, spxscan.ErrNotFound) {
-			return nil, httpio.NewNotFoundMessagef("%s %q not found", tableName, pkeys.RowID())
+			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", tableName, pkeys.RowID())
 		}
 
 		return nil, errors.Wrap(err, "spxscan.Get()")
@@ -383,7 +383,12 @@ func (p *SpannerPatcher) jsonUpdateSet(
 	}
 
 	if len(changeSet) == 0 {
-		return nil, httpio.NewBadRequestMessage("No changes to apply")
+		var values strings.Builder
+		for _, keyPart := range pkeys.keyParts {
+			values.WriteString(fmt.Sprintf(", %s = %v", keyPart.key, keyPart.value))
+		}
+
+		return nil, httpio.NewBadRequestMessagef("No changes to apply on (%s)", values.String()[2:])
 	}
 
 	jsonBytes, err := json.Marshal(changeSet)
@@ -420,7 +425,7 @@ func (p *SpannerPatcher) jsonDeleteSet(
 	oldValues := row.New()
 	if err := spxscan.Get(ctx, txn, oldValues, stmt); err != nil {
 		if errors.Is(err, spxscan.ErrNotFound) {
-			return nil, httpio.NewNotFoundMessagef("%s %q not found", tableName, pkeys.RowID())
+			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", tableName, pkeys.RowID())
 		}
 
 		return nil, errors.Wrap(err, "spxscan.Get()")
