@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.2](https://github.com/cccteam/patcher/compare/v0.6.1...v0.6.2) (2024-11-10)
+
+
+### Dependencies
+
+* Go dependency updates ([#36](https://github.com/cccteam/patcher/issues/36)) ([5c89174](https://github.com/cccteam/patcher/commit/5c89174d55f4c40de382656d296a5d0a7a3a78d7))
+
+
+### Code Cleanup
+
+* Fix error messages ([#33](https://github.com/cccteam/patcher/issues/33)) ([1a86332](https://github.com/cccteam/patcher/commit/1a863322ca3af58cba26f4689ee97fc33f9a6b82))
+
 ## [0.6.1](https://github.com/cccteam/patcher/compare/v0.6.0...v0.6.1) (2024-10-26)
 
 
