@@ -150,7 +150,7 @@ func (p *SpannerPatcher) DeleteWithDataChangeEvent(ctx context.Context, s *spann
 }
 
 func (p *SpannerPatcher) BufferInsert(txn *spanner.ReadWriteTransaction, mutation *Mutation) error {
-	patch, err := p.Resolve(mutation.PrimaryKeys, mutation.PatchSet, mutation.RowStruct.Type())
+	patch, err := p.Resolve(mutation.PrimaryKey, mutation.PatchSet, mutation.RowStruct.Type())
 	if err != nil {
 		return errors.Wrap(err, "Resolve()")
 	}
@@ -164,7 +164,7 @@ func (p *SpannerPatcher) BufferInsert(txn *spanner.ReadWriteTransaction, mutatio
 }
 
 func (p *SpannerPatcher) BufferUpdate(txn *spanner.ReadWriteTransaction, mutation *Mutation) error {
-	patch, err := p.Resolve(mutation.PrimaryKeys, mutation.PatchSet, mutation.RowStruct.Type())
+	patch, err := p.Resolve(mutation.PrimaryKey, mutation.PatchSet, mutation.RowStruct.Type())
 	if err != nil {
 		return errors.Wrap(err, "Resolve()")
 	}
@@ -178,7 +178,7 @@ func (p *SpannerPatcher) BufferUpdate(txn *spanner.ReadWriteTransaction, mutatio
 }
 
 func (p *SpannerPatcher) BufferInsertOrUpdate(txn *spanner.ReadWriteTransaction, mutation *Mutation) error {
-	patch, err := p.Resolve(mutation.PrimaryKeys, mutation.PatchSet, mutation.RowStruct.Type())
+	patch, err := p.Resolve(mutation.PrimaryKey, mutation.PatchSet, mutation.RowStruct.Type())
 	if err != nil {
 		return errors.Wrap(err, "Resolve()")
 	}
@@ -258,7 +258,7 @@ func (p *SpannerPatcher) bufferInsertWithDataChangeEvent(txn *spanner.ReadWriteT
 	m, err := spanner.InsertStruct(p.changeTrackingTable,
 		&DataChangeEvent{
 			TableName:   mutation.TableName,
-			RowID:       mutation.PrimaryKeys.RowID(),
+			RowID:       mutation.PrimaryKey.RowID(),
 			EventTime:   spanner.CommitTimestamp,
 			EventSource: eventSource,
 			ChangeSet:   string(jsonChangeSet),
@@ -276,7 +276,7 @@ func (p *SpannerPatcher) bufferInsertWithDataChangeEvent(txn *spanner.ReadWriteT
 }
 
 func (p *SpannerPatcher) bufferUpdateWithDataChangeEvent(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, mutation *Mutation) error {
-	jsonChangeSet, err := p.jsonUpdateSet(ctx, txn, mutation.TableName, mutation.PrimaryKeys, mutation.PatchSet, mutation.RowStruct)
+	jsonChangeSet, err := p.jsonUpdateSet(ctx, txn, mutation.TableName, mutation.PrimaryKey, mutation.PatchSet, mutation.RowStruct)
 	if err != nil {
 		return err
 	}
@@ -284,7 +284,7 @@ func (p *SpannerPatcher) bufferUpdateWithDataChangeEvent(ctx context.Context, tx
 	m, err := spanner.InsertStruct(p.changeTrackingTable,
 		&DataChangeEvent{
 			TableName:   mutation.TableName,
-			RowID:       mutation.PrimaryKeys.RowID(),
+			RowID:       mutation.PrimaryKey.RowID(),
 			EventTime:   spanner.CommitTimestamp,
 			EventSource: eventSource,
 			ChangeSet:   string(jsonChangeSet),
@@ -371,7 +371,7 @@ func (p *SpannerPatcher) jsonUpdateSet(
 	oldValues := row.New()
 	if err := spxscan.Get(ctx, txn, oldValues, stmt); err != nil {
 		if errors.Is(err, spxscan.ErrNotFound) {
-			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", tableName, pkeys.RowID())
+			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", tableName, pkeys.String())
 		}
 
 		return nil, errors.Wrap(err, "spxscan.Get()")
@@ -383,12 +383,7 @@ func (p *SpannerPatcher) jsonUpdateSet(
 	}
 
 	if len(changeSet) == 0 {
-		var values strings.Builder
-		for _, keyPart := range pkeys.keyParts {
-			values.WriteString(fmt.Sprintf(", %s = %v", keyPart.key, keyPart.value))
-		}
-
-		return nil, httpio.NewBadRequestMessagef("No changes to apply on (%s)", values.String()[2:])
+		return nil, httpio.NewBadRequestMessagef("No changes to apply on %s (%s)", tableName, pkeys.String())
 	}
 
 	jsonBytes, err := json.Marshal(changeSet)
