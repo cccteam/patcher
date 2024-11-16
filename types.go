@@ -40,10 +40,10 @@ type DataChangeEvent struct {
 }
 
 type Mutation struct {
-	TableName   accesstypes.Resource
-	RowStruct   RowStruct
-	PrimaryKeys PrimaryKey
-	PatchSet    *patchset.PatchSet
+	TableName  accesstypes.Resource
+	RowStruct  RowStruct
+	PrimaryKey PrimaryKey
+	PatchSet   *patchset.PatchSet
 }
 
 type DeleteMutation struct {
@@ -101,6 +101,15 @@ func (p PrimaryKey) RowID() string {
 	}
 
 	return id.String()[1:]
+}
+
+func (p PrimaryKey) String() string {
+	var values strings.Builder
+	for _, keyPart := range p.keyParts {
+		values.WriteString(fmt.Sprintf(", %s: %v", keyPart.key, keyPart.value))
+	}
+
+	return values.String()[2:]
 }
 
 func (p PrimaryKey) KeySet() spanner.KeySet {
