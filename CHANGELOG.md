@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.3](https://github.com/cccteam/patcher/compare/v0.6.2...v0.6.3) (2024-11-16)
+
+
+### Features
+
+* Add String() to PrimaryKey ([#37](https://github.com/cccteam/patcher/issues/37)) ([546d91b](https://github.com/cccteam/patcher/commit/546d91b7f653f02d6f8a9158d418130438f65b41))
+
 ## [0.6.2](https://github.com/cccteam/patcher/compare/v0.6.1...v0.6.2) (2024-11-10)
 
 
