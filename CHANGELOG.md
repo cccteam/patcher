@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.4](https://github.com/cccteam/patcher/compare/v0.6.3...v0.6.4) (2024-11-21)
+
+
+### Bug Fixes
+
+* Fix unstable ordering of composite primary keys ([#39](https://github.com/cccteam/patcher/issues/39)) ([6e5f907](https://github.com/cccteam/patcher/commit/6e5f9070eb449d17dd0fa0e2a3515cf0e58853a7))
+
 ## [0.6.3](https://github.com/cccteam/patcher/compare/v0.6.2...v0.6.3) (2024-11-16)
 
 
