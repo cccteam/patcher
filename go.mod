@@ -7,7 +7,7 @@ require (
 	github.com/cccteam/ccc v0.2.9
 	github.com/cccteam/ccc/accesstypes v0.5.0
 	github.com/cccteam/ccc/columnset v0.1.1
-	github.com/cccteam/ccc/patchset v0.3.0
+	github.com/cccteam/ccc/patchset v0.3.1
 	github.com/cccteam/httpio v0.7.1
 	github.com/cccteam/session v0.4.0
 	github.com/cccteam/spxscan v0.0.3

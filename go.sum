@@ -642,8 +642,8 @@ github.com/cccteam/ccc/accesstypes v0.5.0 h1:puGqjSsVOkQGDqwWd4tJGPgrySQOnRsLY6M
 github.com/cccteam/ccc/accesstypes v0.5.0/go.mod h1:b/h5mdhoRGPB6q27wde4VTIMMYPT2MMOw4NqBEG7FZ8=
 github.com/cccteam/ccc/columnset v0.1.1 h1:uMtbUvQXDiljRxCWDe8sKww/wrCim3/HauEotGN9qmk=
 github.com/cccteam/ccc/columnset v0.1.1/go.mod h1:n7yejFJplM5p//JRy1IccRZAu++L2S6duF0++2ipIk4=
-github.com/cccteam/ccc/patchset v0.3.0 h1:SN97UjH3AXGWhHQirO1vTgm/veJMedTDjYbK4PC3HBo=
-github.com/cccteam/ccc/patchset v0.3.0/go.mod h1:BF3sjT0F5w7iZge6+T9dZZnoyNy2CWsh0hqmbW7lLGM=
+github.com/cccteam/ccc/patchset v0.3.1 h1:JBArayhDxPGTCKG5JRHk635uHTJ+3bgooL9zbo79JuU=
+github.com/cccteam/ccc/patchset v0.3.1/go.mod h1:QQnysLFnGR4RsgXebUonOnFQvFGI4jJ5SfRsS8XcdSM=
 github.com/cccteam/ccc/resourceset v0.4.1 h1:berP9zUyrjGdQ/hXm15qH7kF+DWlbdTNtdU/p9SWR8E=
 github.com/cccteam/ccc/resourceset v0.4.1/go.mod h1:R81nDOx5eNrN9XuTRe0P3cW39O/5fyJy6X1tCpHnJhg=
 github.com/cccteam/httpio v0.7.1 h1:+Mgjy+HWJFne0lu2h08Ks10Fe/Lcrcg+944pu9TItsk=

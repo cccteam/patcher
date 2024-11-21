@@ -99,9 +99,10 @@ func (p *patcher) columns(fields []accesstypes.Field, databaseType any) (string,
 }
 
 // Resolve returns a map with the keys set to the database struct tags found on databaseType, and the values set to the values in patchSet.
-func (p *patcher) Resolve(pkeys PrimaryKey, patchSet *patchset.PatchSet, databaseType any) (map[string]any, error) {
-	if len(pkeys.keyParts) == 0 {
-		return nil, errors.New("must include at least one primary key in call to Resolve")
+func (p *patcher) Resolve(patchSet *patchset.PatchSet, databaseType any) (map[string]any, error) {
+	pkeys := patchSet.PrimaryKey()
+	if pkeys.Len() == 0 {
+		return nil, errors.New("PatchSet must include at least one primary key in call to Resolve")
 	}
 
 	fieldTagMapping, err := p.get(databaseType)
@@ -109,7 +110,7 @@ func (p *patcher) Resolve(pkeys PrimaryKey, patchSet *patchset.PatchSet, databas
 		return nil, err
 	}
 
-	newMap := make(map[string]any, len(pkeys.keyParts)+patchSet.Len())
+	newMap := make(map[string]any, pkeys.Len()+patchSet.Len())
 	for structField, value := range all(patchSet.Data(), pkeys.Map()) {
 		c, ok := fieldTagMapping[structField]
 		if !ok {
