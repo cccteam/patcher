@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/cccteam/ccc"
-	"github.com/cccteam/ccc/accesstypes"
 	"github.com/cccteam/ccc/patchset"
 )
 
@@ -148,10 +147,9 @@ func TestPatcher_Spanner_Columns(t *testing.T) {
 		{
 			name: "multiple fields in patchSet",
 			args: args{
-				patchSet: patchset.NewPatchSet(map[accesstypes.Field]any{
-					"Field2": "apple",
-					"Field3": 10,
-				}),
+				patchSet: patchset.New().
+					Set("Field2", "apple").
+					Set("Field3", 10),
 				databaseType: SpannerStruct{},
 			},
 			want: "fieldtwo, field3",
@@ -159,10 +157,9 @@ func TestPatcher_Spanner_Columns(t *testing.T) {
 		{
 			name: "multiple fields not in sorted order",
 			args: args{
-				patchSet: patchset.NewPatchSet(map[accesstypes.Field]any{
-					"Field4": "apple",
-					"Field5": "bannana",
-				}),
+				patchSet: patchset.New().
+					Set("Field4", "apple").
+					Set("Field5", "bannana"),
 				databaseType: SpannerStruct{},
 			},
 			want: "field5, field4",
@@ -205,10 +202,9 @@ func TestPatcher_Postgres_Columns(t *testing.T) {
 		{
 			name: "multiple fields in patchSet",
 			args: args{
-				patchSet: patchset.NewPatchSet(map[accesstypes.Field]any{
-					"Field2": "apple",
-					"Field3": 10,
-				}),
+				patchSet: patchset.New().
+					Set("Field2", "apple").
+					Set("Field3", 10),
 				databaseType: SpannerStruct{},
 			},
 			want: `"fieldtwo", "field3"`,
@@ -216,10 +212,9 @@ func TestPatcher_Postgres_Columns(t *testing.T) {
 		{
 			name: "multiple fields not in sorted order",
 			args: args{
-				patchSet: patchset.NewPatchSet(map[accesstypes.Field]any{
-					"Field4": "apple",
-					"Field5": "bannana",
-				}),
+				patchSet: patchset.New().
+					Set("Field4", "apple").
+					Set("Field5", "bannana"),
 				databaseType: SpannerStruct{},
 			},
 			want: `"field5", "field4"`,

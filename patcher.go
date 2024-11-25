@@ -17,8 +17,8 @@ import (
 
 	"github.com/cccteam/ccc"
 	"github.com/cccteam/ccc/accesstypes"
-	"github.com/cccteam/ccc/columnset"
 	"github.com/cccteam/ccc/patchset"
+	"github.com/cccteam/ccc/queryset"
 	"github.com/go-playground/errors/v5"
 )
 
@@ -37,21 +37,14 @@ type patcher struct {
 	cache map[reflect.Type]map[accesstypes.Field]cacheEntry
 }
 
-// ViewableColumns returns the database struct tags for the fields in databaseType that the user has access to view.
-func (p *patcher) ViewableColumns(ctx context.Context, columnSet columnset.ColumnSet, databaseType any) (string, error) {
-	fileds, err := columnSet.StructFields(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "columnset.ColumnSet.Fields()")
-	}
-
-	return p.columns(fileds, databaseType)
+// Columns returns the database struct tags for the fields in databaseType that the user has access to view.
+func (p *patcher) Columns(ctx context.Context, querySet *queryset.QuerySet, databaseType any) (string, error) {
+	return p.columns(querySet.Fields(), databaseType)
 }
 
 // PatchSetColumns returns the database struct tags for the field in databaseType if it exists in patchSet.
 func (p *patcher) PatchSetColumns(patchSet *patchset.PatchSet, databaseType any) (string, error) {
-	fields := patchSet.StructFields()
-
-	return p.columns(fields, databaseType)
+	return p.columns(patchSet.Fields(), databaseType)
 }
 
 // AllColumns returns the database struct tags for all fields in databaseType.
@@ -110,7 +103,7 @@ func (p *patcher) Resolve(patchSet *patchset.PatchSet, databaseType any) (map[st
 		return nil, err
 	}
 
-	newMap := make(map[string]any, pkeys.Len()+patchSet.Len())
+	newMap := make(map[string]any, patchSet.Len()+pkeys.Len())
 	for structField, value := range all(patchSet.Data(), pkeys.Map()) {
 		c, ok := fieldTagMapping[structField]
 		if !ok {
