@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/cccteam/ccc/accesstypes"
-	"github.com/cccteam/ccc/patchset"
+	"github.com/cccteam/ccc/resource"
 )
 
 type RowStruct interface {
@@ -39,7 +39,7 @@ type DataChangeEvent struct {
 type Mutation struct {
 	TableName accesstypes.Resource
 	RowStruct RowStruct
-	PatchSet  *patchset.PatchSet
+	PatchSet  *resource.PatchSet
 }
 
 type DiffElem struct {
