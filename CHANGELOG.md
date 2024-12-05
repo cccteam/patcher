@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.0](https://github.com/cccteam/patcher/compare/v0.6.4...v0.7.0) (2024-12-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* Refactor to support upstream changes ([#42](https://github.com/cccteam/patcher/issues/42))
+
+### Code Refactoring
+
+* Refactor to support upstream changes ([#42](https://github.com/cccteam/patcher/issues/42)) ([820136b](https://github.com/cccteam/patcher/commit/820136bf334682bba36c18913dd6720ec1e634bb))
+
 ## [0.6.4](https://github.com/cccteam/patcher/compare/v0.6.3...v0.6.4) (2024-11-21)
 
 
