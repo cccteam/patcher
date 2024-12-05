@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/cccteam/ccc"
-	"github.com/cccteam/ccc/patchset"
+	"github.com/cccteam/ccc/resource"
 )
 
 type Int int
@@ -136,7 +136,7 @@ func TestPatcher_Spanner_Columns(t *testing.T) {
 	tm := NewSpannerPatcher()
 
 	type args struct {
-		patchSet     *patchset.PatchSet
+		patchSet     *resource.PatchSet
 		databaseType any
 	}
 	tests := []struct {
@@ -147,7 +147,7 @@ func TestPatcher_Spanner_Columns(t *testing.T) {
 		{
 			name: "multiple fields in patchSet",
 			args: args{
-				patchSet: patchset.New().
+				patchSet: resource.NewPatchSet().
 					Set("Field2", "apple").
 					Set("Field3", 10),
 				databaseType: SpannerStruct{},
@@ -157,7 +157,7 @@ func TestPatcher_Spanner_Columns(t *testing.T) {
 		{
 			name: "multiple fields not in sorted order",
 			args: args{
-				patchSet: patchset.New().
+				patchSet: resource.NewPatchSet().
 					Set("Field4", "apple").
 					Set("Field5", "bannana"),
 				databaseType: SpannerStruct{},
@@ -191,7 +191,7 @@ func TestPatcher_Postgres_Columns(t *testing.T) {
 	tm := NewPostgresPatcher()
 
 	type args struct {
-		patchSet     *patchset.PatchSet
+		patchSet     *resource.PatchSet
 		databaseType any
 	}
 	tests := []struct {
@@ -202,7 +202,7 @@ func TestPatcher_Postgres_Columns(t *testing.T) {
 		{
 			name: "multiple fields in patchSet",
 			args: args{
-				patchSet: patchset.New().
+				patchSet: resource.NewPatchSet().
 					Set("Field2", "apple").
 					Set("Field3", 10),
 				databaseType: SpannerStruct{},
@@ -212,7 +212,7 @@ func TestPatcher_Postgres_Columns(t *testing.T) {
 		{
 			name: "multiple fields not in sorted order",
 			args: args{
-				patchSet: patchset.New().
+				patchSet: resource.NewPatchSet().
 					Set("Field4", "apple").
 					Set("Field5", "bannana"),
 				databaseType: SpannerStruct{},

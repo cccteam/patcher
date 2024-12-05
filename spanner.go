@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"strings"
 
 	"cloud.google.com/go/spanner"
 	"github.com/cccteam/ccc/accesstypes"
-	"github.com/cccteam/ccc/patchset"
+	"github.com/cccteam/ccc/resource"
 	"github.com/cccteam/httpio"
 	"github.com/cccteam/spxscan"
 	"github.com/go-playground/errors/v5"
@@ -192,7 +191,7 @@ func (p *SpannerPatcher) BufferInsertOrUpdate(txn *spanner.ReadWriteTransaction,
 }
 
 func (p *SpannerPatcher) BufferDelete(txn *spanner.ReadWriteTransaction, mutation *Mutation) error {
-	m := spanner.Delete(string(mutation.TableName), mutation.PatchSet.PrimaryKey().KeySet())
+	m := spanner.Delete(string(mutation.TableName), mutation.PatchSet.KeySet().KeySet())
 
 	if err := txn.BufferWrite([]*spanner.Mutation{m}); err != nil {
 		return errors.Wrap(err, "spanner.ReadWriteTransaction.BufferWrite()")
@@ -258,7 +257,7 @@ func (p *SpannerPatcher) bufferInsertWithDataChangeEvent(txn *spanner.ReadWriteT
 	m, err := spanner.InsertStruct(p.changeTrackingTable,
 		&DataChangeEvent{
 			TableName:   mutation.TableName,
-			RowID:       mutation.PatchSet.PrimaryKey().RowID(),
+			RowID:       mutation.PatchSet.KeySet().RowID(),
 			EventTime:   spanner.CommitTimestamp,
 			EventSource: eventSource,
 			ChangeSet:   string(jsonChangeSet),
@@ -276,8 +275,8 @@ func (p *SpannerPatcher) bufferInsertWithDataChangeEvent(txn *spanner.ReadWriteT
 }
 
 func (p *SpannerPatcher) bufferUpdateWithDataChangeEvent(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, mutation *Mutation) error {
-	pkey := mutation.PatchSet.PrimaryKey()
-	jsonChangeSet, err := p.jsonUpdateSet(ctx, txn, mutation.TableName, pkey, mutation.PatchSet, mutation.RowStruct)
+	keySet := mutation.PatchSet.KeySet()
+	jsonChangeSet, err := p.jsonUpdateSet(ctx, txn, mutation.TableName, keySet, mutation.PatchSet, mutation.RowStruct)
 	if err != nil {
 		return err
 	}
@@ -285,7 +284,7 @@ func (p *SpannerPatcher) bufferUpdateWithDataChangeEvent(ctx context.Context, tx
 	m, err := spanner.InsertStruct(p.changeTrackingTable,
 		&DataChangeEvent{
 			TableName:   mutation.TableName,
-			RowID:       pkey.RowID(),
+			RowID:       keySet.RowID(),
 			EventTime:   spanner.CommitTimestamp,
 			EventSource: eventSource,
 			ChangeSet:   string(jsonChangeSet),
@@ -303,8 +302,8 @@ func (p *SpannerPatcher) bufferUpdateWithDataChangeEvent(ctx context.Context, tx
 }
 
 func (p *SpannerPatcher) bufferDeleteWithDataChangeEvent(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, mutation *Mutation) error {
-	pkey := mutation.PatchSet.PrimaryKey()
-	jsonChangeSet, err := p.jsonDeleteSet(ctx, txn, mutation.TableName, pkey, mutation.RowStruct)
+	keySet := mutation.PatchSet.KeySet()
+	jsonChangeSet, err := p.jsonDeleteSet(ctx, txn, mutation.TableName, keySet, mutation.RowStruct)
 	if err != nil {
 		return err
 	}
@@ -312,7 +311,7 @@ func (p *SpannerPatcher) bufferDeleteWithDataChangeEvent(ctx context.Context, tx
 	m, err := spanner.InsertStruct(p.changeTrackingTable,
 		&DataChangeEvent{
 			TableName:   mutation.TableName,
-			RowID:       pkey.RowID(),
+			RowID:       keySet.RowID(),
 			EventTime:   spanner.CommitTimestamp,
 			EventSource: eventSource,
 			ChangeSet:   string(jsonChangeSet),
@@ -329,7 +328,7 @@ func (p *SpannerPatcher) bufferDeleteWithDataChangeEvent(ctx context.Context, tx
 	return nil
 }
 
-func (p *SpannerPatcher) jsonInsertSet(patchSet *patchset.PatchSet, row RowStruct) ([]byte, error) {
+func (p *SpannerPatcher) jsonInsertSet(patchSet *resource.PatchSet, row RowStruct) ([]byte, error) {
 	changeSet, err := p.Diff(row.New(), patchSet)
 	if err != nil {
 		return nil, errors.Wrap(err, "Diff()")
@@ -348,32 +347,32 @@ func (p *SpannerPatcher) jsonInsertSet(patchSet *patchset.PatchSet, row RowStruc
 }
 
 func (p *SpannerPatcher) jsonUpdateSet(
-	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, pkeys patchset.PrimaryKey, patchSet *patchset.PatchSet, row RowStruct) ([]byte, error,
+	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, keySet resource.KeySet, patchSet *resource.PatchSet, row RowStruct) ([]byte, error,
 ) {
 	patchSetColumns, err := p.PatchSetColumns(patchSet, row.Type())
 	if err != nil {
 		return nil, errors.Wrap(err, "SpannerPatcher.Columns()")
 	}
 
-	where := strings.Builder{}
-	for _, keyPart := range pkeys.Parts() {
-		where.WriteString(fmt.Sprintf(" AND %s = @%s", keyPart.Key, strings.ToLower(string(keyPart.Key))))
+	where, params, err := p.Where(keySet, row.Type())
+	if err != nil {
+		return nil, errors.Wrap(err, "patcher.Where()")
 	}
 
 	stmt := spanner.NewStatement(fmt.Sprintf(`
 			SELECT
 				%s
 			FROM %s 
-			WHERE %s`, patchSetColumns, tableName, where.String()[5:],
+			WHERE %s`, patchSetColumns, tableName, where,
 	))
-	for _, keyPart := range pkeys.Parts() {
-		stmt.Params[strings.ToLower(string(keyPart.Key))] = keyPart.Value
+	for param, value := range params {
+		stmt.Params[param] = value
 	}
 
 	oldValues := row.New()
 	if err := spxscan.Get(ctx, txn, oldValues, stmt); err != nil {
 		if errors.Is(err, spxscan.ErrNotFound) {
-			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", tableName, pkeys.String())
+			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", tableName, keySet.String())
 		}
 
 		return nil, errors.Wrap(err, "spxscan.Get()")
@@ -385,7 +384,7 @@ func (p *SpannerPatcher) jsonUpdateSet(
 	}
 
 	if len(changeSet) == 0 {
-		return nil, httpio.NewBadRequestMessagef("No changes to apply on %s (%s)", tableName, pkeys.String())
+		return nil, httpio.NewBadRequestMessagef("No changes to apply on %s (%s)", tableName, keySet.String())
 	}
 
 	jsonBytes, err := json.Marshal(changeSet)
@@ -397,32 +396,32 @@ func (p *SpannerPatcher) jsonUpdateSet(
 }
 
 func (p *SpannerPatcher) jsonDeleteSet(
-	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, pkeys patchset.PrimaryKey, row RowStruct,
+	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, keySet resource.KeySet, row RowStruct,
 ) ([]byte, error) {
 	columns, err := p.AllColumns(row.Type())
 	if err != nil {
 		return nil, errors.Wrap(err, "SpannerPatcher.Columns()")
 	}
 
-	where := strings.Builder{}
-	for _, keyPart := range pkeys.Parts() {
-		where.WriteString(fmt.Sprintf(" AND %s = @%s", keyPart.Key, strings.ToLower(string(keyPart.Key))))
+	where, params, err := p.Where(keySet, row.Type())
+	if err != nil {
+		return nil, errors.Wrap(err, "patcher.Where()")
 	}
 
 	stmt := spanner.NewStatement(fmt.Sprintf(`
 			SELECT
 				%s
 			FROM %s 
-			WHERE %s`, columns, tableName, where.String()[5:],
+			WHERE %s`, columns, tableName, where,
 	))
-	for _, keyPart := range pkeys.Parts() {
-		stmt.Params[strings.ToLower(string(keyPart.Key))] = keyPart.Value
+	for param, value := range params {
+		stmt.Params[param] = value
 	}
 
 	oldValues := row.New()
 	if err := spxscan.Get(ctx, txn, oldValues, stmt); err != nil {
 		if errors.Is(err, spxscan.ErrNotFound) {
-			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", tableName, pkeys.RowID())
+			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", tableName, keySet.RowID())
 		}
 
 		return nil, errors.Wrap(err, "spxscan.Get()")
