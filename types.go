@@ -4,29 +4,7 @@ import (
 	"time"
 
 	"github.com/cccteam/ccc/accesstypes"
-	"github.com/cccteam/ccc/resource"
 )
-
-type RowStruct interface {
-	New() any
-	Type() any
-}
-
-type row[T any] struct {
-	r *T
-}
-
-func NewRowStruct[T any](rowStruct T) RowStruct {
-	return &row[T]{r: &rowStruct}
-}
-
-func (r *row[T]) New() any {
-	return new(T)
-}
-
-func (r *row[T]) Type() any {
-	return r.r
-}
 
 type DataChangeEvent struct {
 	TableName   accesstypes.Resource `spanner:"TableName"`
@@ -34,12 +12,6 @@ type DataChangeEvent struct {
 	EventTime   time.Time            `spanner:"EventTime"`
 	EventSource string               `spanner:"EventSource"`
 	ChangeSet   string               `spanner:"ChangeSet"`
-}
-
-type Mutation struct {
-	TableName accesstypes.Resource
-	RowStruct RowStruct
-	PatchSet  *resource.PatchSet
 }
 
 type DiffElem struct {

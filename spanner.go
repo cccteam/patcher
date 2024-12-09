@@ -36,9 +36,9 @@ func (p *SpannerPatcher) WithDataChangeTableName(tableName string) *SpannerPatch
 	return p
 }
 
-func (p *SpannerPatcher) Insert(ctx context.Context, s *spanner.Client, mutation *Mutation) error {
+func (p *SpannerPatcher) Insert(ctx context.Context, s *spanner.Client, patchSet *resource.PatchSet) error {
 	if _, err := s.ReadWriteTransaction(ctx, func(_ context.Context, txn *spanner.ReadWriteTransaction) error {
-		if err := p.BufferInsert(txn, mutation); err != nil {
+		if err := p.BufferInsert(txn, patchSet); err != nil {
 			return err
 		}
 
@@ -50,9 +50,9 @@ func (p *SpannerPatcher) Insert(ctx context.Context, s *spanner.Client, mutation
 	return nil
 }
 
-func (p *SpannerPatcher) Update(ctx context.Context, s *spanner.Client, mutation *Mutation) error {
+func (p *SpannerPatcher) Update(ctx context.Context, s *spanner.Client, patchSet *resource.PatchSet) error {
 	if _, err := s.ReadWriteTransaction(ctx, func(_ context.Context, txn *spanner.ReadWriteTransaction) error {
-		if err := p.BufferUpdate(txn, mutation); err != nil {
+		if err := p.BufferUpdate(txn, patchSet); err != nil {
 			return err
 		}
 
@@ -64,9 +64,9 @@ func (p *SpannerPatcher) Update(ctx context.Context, s *spanner.Client, mutation
 	return nil
 }
 
-func (p *SpannerPatcher) InsertOrUpdate(ctx context.Context, s *spanner.Client, mutation *Mutation) error {
+func (p *SpannerPatcher) InsertOrUpdate(ctx context.Context, s *spanner.Client, patchSet *resource.PatchSet) error {
 	if _, err := s.ReadWriteTransaction(ctx, func(_ context.Context, txn *spanner.ReadWriteTransaction) error {
-		if err := p.BufferInsertOrUpdate(txn, mutation); err != nil {
+		if err := p.BufferInsertOrUpdate(txn, patchSet); err != nil {
 			return err
 		}
 
@@ -78,9 +78,9 @@ func (p *SpannerPatcher) InsertOrUpdate(ctx context.Context, s *spanner.Client, 
 	return nil
 }
 
-func (p *SpannerPatcher) Delete(ctx context.Context, s *spanner.Client, mutation *Mutation) error {
+func (p *SpannerPatcher) Delete(ctx context.Context, s *spanner.Client, patchSet *resource.PatchSet) error {
 	if _, err := s.ReadWriteTransaction(ctx, func(_ context.Context, txn *spanner.ReadWriteTransaction) error {
-		if err := p.BufferDelete(txn, mutation); err != nil {
+		if err := p.BufferDelete(txn, patchSet); err != nil {
 			return err
 		}
 
@@ -92,9 +92,9 @@ func (p *SpannerPatcher) Delete(ctx context.Context, s *spanner.Client, mutation
 	return nil
 }
 
-func (p *SpannerPatcher) InsertWithDataChangeEvent(ctx context.Context, s *spanner.Client, eventSource string, mutation *Mutation) error {
+func (p *SpannerPatcher) InsertWithDataChangeEvent(ctx context.Context, s *spanner.Client, eventSource string, patchSet *resource.PatchSet) error {
 	if _, err := s.ReadWriteTransaction(ctx, func(_ context.Context, txn *spanner.ReadWriteTransaction) error {
-		if err := p.BufferInsertWithDataChangeEvent(txn, eventSource, mutation); err != nil {
+		if err := p.BufferInsertWithDataChangeEvent(txn, eventSource, patchSet); err != nil {
 			return err
 		}
 
@@ -106,9 +106,9 @@ func (p *SpannerPatcher) InsertWithDataChangeEvent(ctx context.Context, s *spann
 	return nil
 }
 
-func (p *SpannerPatcher) InsertOrUpdateWithDataChangeEvent(ctx context.Context, s *spanner.Client, eventSource string, mutation *Mutation) error {
+func (p *SpannerPatcher) InsertOrUpdateWithDataChangeEvent(ctx context.Context, s *spanner.Client, eventSource string, patchSet *resource.PatchSet) error {
 	if _, err := s.ReadWriteTransaction(ctx, func(_ context.Context, txn *spanner.ReadWriteTransaction) error {
-		if err := p.BufferInsertOrUpdateWithDataChangeEvent(txn, eventSource, mutation); err != nil {
+		if err := p.BufferInsertOrUpdateWithDataChangeEvent(txn, eventSource, patchSet); err != nil {
 			return err
 		}
 
@@ -120,9 +120,9 @@ func (p *SpannerPatcher) InsertOrUpdateWithDataChangeEvent(ctx context.Context, 
 	return nil
 }
 
-func (p *SpannerPatcher) UpdateWithDataChangeEvent(ctx context.Context, s *spanner.Client, eventSource string, mutation *Mutation) error {
+func (p *SpannerPatcher) UpdateWithDataChangeEvent(ctx context.Context, s *spanner.Client, eventSource string, patchSet *resource.PatchSet) error {
 	if _, err := s.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		if err := p.BufferUpdateWithDataChangeEvent(ctx, txn, eventSource, mutation); err != nil {
+		if err := p.BufferUpdateWithDataChangeEvent(ctx, txn, eventSource, patchSet); err != nil {
 			return err
 		}
 
@@ -134,9 +134,9 @@ func (p *SpannerPatcher) UpdateWithDataChangeEvent(ctx context.Context, s *spann
 	return nil
 }
 
-func (p *SpannerPatcher) DeleteWithDataChangeEvent(ctx context.Context, s *spanner.Client, eventSource string, mutation *Mutation) error {
+func (p *SpannerPatcher) DeleteWithDataChangeEvent(ctx context.Context, s *spanner.Client, eventSource string, patchSet *resource.PatchSet) error {
 	if _, err := s.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		if err := p.BufferDeleteWithDataChangeEvent(ctx, txn, eventSource, mutation); err != nil {
+		if err := p.BufferDeleteWithDataChangeEvent(ctx, txn, eventSource, patchSet); err != nil {
 			return err
 		}
 
@@ -148,12 +148,12 @@ func (p *SpannerPatcher) DeleteWithDataChangeEvent(ctx context.Context, s *spann
 	return nil
 }
 
-func (p *SpannerPatcher) BufferInsert(txn *spanner.ReadWriteTransaction, mutation *Mutation) error {
-	patch, err := p.Resolve(mutation.PatchSet, mutation.RowStruct.Type())
+func (p *SpannerPatcher) BufferInsert(txn *spanner.ReadWriteTransaction, patchSet *resource.PatchSet) error {
+	patch, err := p.Resolve(patchSet)
 	if err != nil {
 		return errors.Wrap(err, "Resolve()")
 	}
-	m := spanner.InsertMap(string(mutation.TableName), patch)
+	m := spanner.InsertMap(string(patchSet.Resource()), patch)
 
 	if err := txn.BufferWrite([]*spanner.Mutation{m}); err != nil {
 		return errors.Wrap(err, "spanner.ReadWriteTransaction.BufferWrite()")
@@ -162,12 +162,12 @@ func (p *SpannerPatcher) BufferInsert(txn *spanner.ReadWriteTransaction, mutatio
 	return nil
 }
 
-func (p *SpannerPatcher) BufferUpdate(txn *spanner.ReadWriteTransaction, mutation *Mutation) error {
-	patch, err := p.Resolve(mutation.PatchSet, mutation.RowStruct.Type())
+func (p *SpannerPatcher) BufferUpdate(txn *spanner.ReadWriteTransaction, patchSet *resource.PatchSet) error {
+	patch, err := p.Resolve(patchSet)
 	if err != nil {
 		return errors.Wrap(err, "Resolve()")
 	}
-	m := spanner.UpdateMap(string(mutation.TableName), patch)
+	m := spanner.UpdateMap(string(patchSet.Resource()), patch)
 
 	if err := txn.BufferWrite([]*spanner.Mutation{m}); err != nil {
 		return errors.Wrap(err, "spanner.ReadWriteTransaction.BufferWrite()")
@@ -176,12 +176,12 @@ func (p *SpannerPatcher) BufferUpdate(txn *spanner.ReadWriteTransaction, mutatio
 	return nil
 }
 
-func (p *SpannerPatcher) BufferInsertOrUpdate(txn *spanner.ReadWriteTransaction, mutation *Mutation) error {
-	patch, err := p.Resolve(mutation.PatchSet, mutation.RowStruct.Type())
+func (p *SpannerPatcher) BufferInsertOrUpdate(txn *spanner.ReadWriteTransaction, patchSet *resource.PatchSet) error {
+	patch, err := p.Resolve(patchSet)
 	if err != nil {
 		return errors.Wrap(err, "Resolve()")
 	}
-	m := spanner.InsertOrUpdateMap(string(mutation.TableName), patch)
+	m := spanner.InsertOrUpdateMap(string(patchSet.Resource()), patch)
 
 	if err := txn.BufferWrite([]*spanner.Mutation{m}); err != nil {
 		return errors.Wrap(err, "spanner.ReadWriteTransaction.BufferWrite()")
@@ -190,8 +190,8 @@ func (p *SpannerPatcher) BufferInsertOrUpdate(txn *spanner.ReadWriteTransaction,
 	return nil
 }
 
-func (p *SpannerPatcher) BufferDelete(txn *spanner.ReadWriteTransaction, mutation *Mutation) error {
-	m := spanner.Delete(string(mutation.TableName), mutation.PatchSet.KeySet().KeySet())
+func (p *SpannerPatcher) BufferDelete(txn *spanner.ReadWriteTransaction, patchSet *resource.PatchSet) error {
+	m := spanner.Delete(string(patchSet.Resource()), patchSet.PrimaryKey().KeySet())
 
 	if err := txn.BufferWrite([]*spanner.Mutation{m}); err != nil {
 		return errors.Wrap(err, "spanner.ReadWriteTransaction.BufferWrite()")
@@ -200,64 +200,64 @@ func (p *SpannerPatcher) BufferDelete(txn *spanner.ReadWriteTransaction, mutatio
 	return nil
 }
 
-func (p *SpannerPatcher) BufferInsertWithDataChangeEvent(txn *spanner.ReadWriteTransaction, eventSource string, mutation *Mutation) error {
-	if err := p.BufferInsert(txn, mutation); err != nil {
+func (p *SpannerPatcher) BufferInsertWithDataChangeEvent(txn *spanner.ReadWriteTransaction, eventSource string, patchSet *resource.PatchSet) error {
+	if err := p.BufferInsert(txn, patchSet); err != nil {
 		return err
 	}
 
-	if err := p.bufferInsertWithDataChangeEvent(txn, eventSource, mutation); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (p *SpannerPatcher) BufferInsertOrUpdateWithDataChangeEvent(txn *spanner.ReadWriteTransaction, eventSource string, mutation *Mutation) error {
-	if err := p.BufferInsertOrUpdate(txn, mutation); err != nil {
-		return err
-	}
-
-	if err := p.bufferInsertWithDataChangeEvent(txn, eventSource, mutation); err != nil {
+	if err := p.bufferInsertWithDataChangeEvent(txn, eventSource, patchSet); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (p *SpannerPatcher) BufferUpdateWithDataChangeEvent(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, mutation *Mutation) error {
-	if err := p.BufferUpdate(txn, mutation); err != nil {
+func (p *SpannerPatcher) BufferInsertOrUpdateWithDataChangeEvent(txn *spanner.ReadWriteTransaction, eventSource string, patchSet *resource.PatchSet) error {
+	if err := p.BufferInsertOrUpdate(txn, patchSet); err != nil {
 		return err
 	}
 
-	if err := p.bufferUpdateWithDataChangeEvent(ctx, txn, eventSource, mutation); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (p *SpannerPatcher) BufferDeleteWithDataChangeEvent(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, mutation *Mutation) error {
-	if err := p.BufferDelete(txn, mutation); err != nil {
-		return err
-	}
-
-	if err := p.bufferDeleteWithDataChangeEvent(ctx, txn, eventSource, mutation); err != nil {
+	if err := p.bufferInsertWithDataChangeEvent(txn, eventSource, patchSet); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (p *SpannerPatcher) bufferInsertWithDataChangeEvent(txn *spanner.ReadWriteTransaction, eventSource string, mutation *Mutation) error {
-	jsonChangeSet, err := p.jsonInsertSet(mutation.PatchSet, mutation.RowStruct)
+func (p *SpannerPatcher) BufferUpdateWithDataChangeEvent(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, patchSet *resource.PatchSet) error {
+	if err := p.BufferUpdate(txn, patchSet); err != nil {
+		return err
+	}
+
+	if err := p.bufferUpdateWithDataChangeEvent(ctx, txn, eventSource, patchSet); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *SpannerPatcher) BufferDeleteWithDataChangeEvent(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, patchSet *resource.PatchSet) error {
+	if err := p.BufferDelete(txn, patchSet); err != nil {
+		return err
+	}
+
+	if err := p.bufferDeleteWithDataChangeEvent(ctx, txn, eventSource, patchSet); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *SpannerPatcher) bufferInsertWithDataChangeEvent(txn *spanner.ReadWriteTransaction, eventSource string, patchSet *resource.PatchSet) error {
+	jsonChangeSet, err := p.jsonInsertSet(patchSet)
 	if err != nil {
 		return err
 	}
 
 	m, err := spanner.InsertStruct(p.changeTrackingTable,
 		&DataChangeEvent{
-			TableName:   mutation.TableName,
-			RowID:       mutation.PatchSet.KeySet().RowID(),
+			TableName:   patchSet.Resource(),
+			RowID:       patchSet.PrimaryKey().RowID(),
 			EventTime:   spanner.CommitTimestamp,
 			EventSource: eventSource,
 			ChangeSet:   string(jsonChangeSet),
@@ -274,16 +274,42 @@ func (p *SpannerPatcher) bufferInsertWithDataChangeEvent(txn *spanner.ReadWriteT
 	return nil
 }
 
-func (p *SpannerPatcher) bufferUpdateWithDataChangeEvent(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, mutation *Mutation) error {
-	keySet := mutation.PatchSet.KeySet()
-	jsonChangeSet, err := p.jsonUpdateSet(ctx, txn, mutation.TableName, keySet, mutation.PatchSet, mutation.RowStruct)
+func (p *SpannerPatcher) bufferUpdateWithDataChangeEvent(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, patchSet *resource.PatchSet) error {
+	jsonChangeSet, err := p.jsonUpdateSet(ctx, txn, patchSet.Resource(), patchSet)
 	if err != nil {
 		return err
 	}
 
 	m, err := spanner.InsertStruct(p.changeTrackingTable,
 		&DataChangeEvent{
-			TableName:   mutation.TableName,
+			TableName:   patchSet.Resource(),
+			RowID:       patchSet.PrimaryKey().RowID(),
+			EventTime:   spanner.CommitTimestamp,
+			EventSource: eventSource,
+			ChangeSet:   string(jsonChangeSet),
+		},
+	)
+	if err != nil {
+		return errors.Wrap(err, "spanner.InsertStruct()")
+	}
+
+	if err := txn.BufferWrite([]*spanner.Mutation{m}); err != nil {
+		return errors.Wrap(err, "spanner.ReadWriteTransaction.BufferWrite()")
+	}
+
+	return nil
+}
+
+func (p *SpannerPatcher) bufferDeleteWithDataChangeEvent(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, patchSet *resource.PatchSet) error {
+	keySet := patchSet.PrimaryKey()
+	jsonChangeSet, err := p.jsonDeleteSet(ctx, txn, patchSet)
+	if err != nil {
+		return err
+	}
+
+	m, err := spanner.InsertStruct(p.changeTrackingTable,
+		&DataChangeEvent{
+			TableName:   patchSet.Resource(),
 			RowID:       keySet.RowID(),
 			EventTime:   spanner.CommitTimestamp,
 			EventSource: eventSource,
@@ -301,35 +327,8 @@ func (p *SpannerPatcher) bufferUpdateWithDataChangeEvent(ctx context.Context, tx
 	return nil
 }
 
-func (p *SpannerPatcher) bufferDeleteWithDataChangeEvent(ctx context.Context, txn *spanner.ReadWriteTransaction, eventSource string, mutation *Mutation) error {
-	keySet := mutation.PatchSet.KeySet()
-	jsonChangeSet, err := p.jsonDeleteSet(ctx, txn, mutation.TableName, keySet, mutation.RowStruct)
-	if err != nil {
-		return err
-	}
-
-	m, err := spanner.InsertStruct(p.changeTrackingTable,
-		&DataChangeEvent{
-			TableName:   mutation.TableName,
-			RowID:       keySet.RowID(),
-			EventTime:   spanner.CommitTimestamp,
-			EventSource: eventSource,
-			ChangeSet:   string(jsonChangeSet),
-		},
-	)
-	if err != nil {
-		return errors.Wrap(err, "spanner.InsertStruct()")
-	}
-
-	if err := txn.BufferWrite([]*spanner.Mutation{m}); err != nil {
-		return errors.Wrap(err, "spanner.ReadWriteTransaction.BufferWrite()")
-	}
-
-	return nil
-}
-
-func (p *SpannerPatcher) jsonInsertSet(patchSet *resource.PatchSet, row RowStruct) ([]byte, error) {
-	changeSet, err := p.Diff(row.New(), patchSet)
+func (p *SpannerPatcher) jsonInsertSet(patchSet *resource.PatchSet) ([]byte, error) {
+	changeSet, err := p.Diff(patchSet.Row(), patchSet)
 	if err != nil {
 		return nil, errors.Wrap(err, "Diff()")
 	}
@@ -347,14 +346,14 @@ func (p *SpannerPatcher) jsonInsertSet(patchSet *resource.PatchSet, row RowStruc
 }
 
 func (p *SpannerPatcher) jsonUpdateSet(
-	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, keySet resource.KeySet, patchSet *resource.PatchSet, row RowStruct) ([]byte, error,
+	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, patchSet *resource.PatchSet) ([]byte, error,
 ) {
-	patchSetColumns, err := p.PatchSetColumns(patchSet, row.Type())
+	patchSetColumns, err := p.PatchColumns(patchSet)
 	if err != nil {
 		return nil, errors.Wrap(err, "SpannerPatcher.Columns()")
 	}
 
-	where, params, err := p.Where(keySet, row.Type())
+	where, params, err := p.Where(patchSet.PrimaryKey(), patchSet.Row())
 	if err != nil {
 		return nil, errors.Wrap(err, "patcher.Where()")
 	}
@@ -363,16 +362,16 @@ func (p *SpannerPatcher) jsonUpdateSet(
 			SELECT
 				%s
 			FROM %s 
-			WHERE %s`, patchSetColumns, tableName, where,
+			%s`, patchSetColumns, tableName, where,
 	))
 	for param, value := range params {
 		stmt.Params[param] = value
 	}
 
-	oldValues := row.New()
+	oldValues := patchSet.Row()
 	if err := spxscan.Get(ctx, txn, oldValues, stmt); err != nil {
 		if errors.Is(err, spxscan.ErrNotFound) {
-			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", tableName, keySet.String())
+			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", tableName, patchSet.PrimaryKey().String())
 		}
 
 		return nil, errors.Wrap(err, "spxscan.Get()")
@@ -384,7 +383,7 @@ func (p *SpannerPatcher) jsonUpdateSet(
 	}
 
 	if len(changeSet) == 0 {
-		return nil, httpio.NewBadRequestMessagef("No changes to apply on %s (%s)", tableName, keySet.String())
+		return nil, httpio.NewBadRequestMessagef("No changes to apply on %s (%s)", tableName, patchSet.PrimaryKey().String())
 	}
 
 	jsonBytes, err := json.Marshal(changeSet)
@@ -396,14 +395,14 @@ func (p *SpannerPatcher) jsonUpdateSet(
 }
 
 func (p *SpannerPatcher) jsonDeleteSet(
-	ctx context.Context, txn *spanner.ReadWriteTransaction, tableName accesstypes.Resource, keySet resource.KeySet, row RowStruct,
+	ctx context.Context, txn *spanner.ReadWriteTransaction, patchSet *resource.PatchSet,
 ) ([]byte, error) {
-	columns, err := p.AllColumns(row.Type())
+	columns, err := p.AllColumns(patchSet.Row())
 	if err != nil {
 		return nil, errors.Wrap(err, "SpannerPatcher.Columns()")
 	}
 
-	where, params, err := p.Where(keySet, row.Type())
+	where, params, err := p.Where(patchSet.PrimaryKey(), patchSet.Row())
 	if err != nil {
 		return nil, errors.Wrap(err, "patcher.Where()")
 	}
@@ -412,16 +411,16 @@ func (p *SpannerPatcher) jsonDeleteSet(
 			SELECT
 				%s
 			FROM %s 
-			WHERE %s`, columns, tableName, where,
+			%s`, columns, patchSet.Resource(), where,
 	))
 	for param, value := range params {
 		stmt.Params[param] = value
 	}
 
-	oldValues := row.New()
+	oldValues := patchSet.Row()
 	if err := spxscan.Get(ctx, txn, oldValues, stmt); err != nil {
 		if errors.Is(err, spxscan.ErrNotFound) {
-			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", tableName, keySet.RowID())
+			return nil, httpio.NewNotFoundMessagef("%s (%s) not found", patchSet.Resource(), patchSet.PrimaryKey().RowID())
 		}
 
 		return nil, errors.Wrap(err, "spxscan.Get()")

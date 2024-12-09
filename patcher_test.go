@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cccteam/ccc"
+	"github.com/cccteam/ccc/accesstypes"
 	"github.com/cccteam/ccc/resource"
 )
 
@@ -123,44 +124,46 @@ func Test_match(t *testing.T) {
 	}
 }
 
+type SpannerStruct struct {
+	Field1 string `spanner:"field1"`
+	Field2 string `spanner:"fieldtwo"`
+	Field3 int    `spanner:"field3"`
+	Field5 string `spanner:"field5"`
+	Field4 string `spanner:"field4"`
+}
+
+func (SpannerStruct) Resource() accesstypes.Resource {
+	return "SpannerStructs"
+}
+
 func TestPatcher_Spanner_Columns(t *testing.T) {
 	t.Parallel()
-	type SpannerStruct struct {
-		Field1 string `spanner:"field1"`
-		Field2 string `spanner:"fieldtwo"`
-		Field3 int    `spanner:"field3"`
-		Field5 string `spanner:"field5"`
-		Field4 string `spanner:"field4"`
-	}
 
 	tm := NewSpannerPatcher()
 
 	type args struct {
-		patchSet     *resource.PatchSet
-		databaseType any
+		patchSet *resource.PatchSet
 	}
 	tests := []struct {
 		name string
 		args args
-		want string
+		want Columns
 	}{
 		{
 			name: "multiple fields in patchSet",
 			args: args{
-				patchSet: resource.NewPatchSet().
+				patchSet: resource.NewPatchSet(resource.NewRow[SpannerStruct]()).
 					Set("Field2", "apple").
 					Set("Field3", 10),
-				databaseType: SpannerStruct{},
 			},
 			want: "fieldtwo, field3",
 		},
 		{
 			name: "multiple fields not in sorted order",
 			args: args{
-				patchSet: resource.NewPatchSet().
+				patchSet: resource.NewPatchSet(resource.NewRow[SpannerStruct]()).
 					Set("Field4", "apple").
 					Set("Field5", "bannana"),
-				databaseType: SpannerStruct{},
 			},
 			want: "field5, field4",
 		},
@@ -170,7 +173,7 @@ func TestPatcher_Spanner_Columns(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, _ := tm.PatchSetColumns(tt.args.patchSet, tt.args.databaseType)
+			got, _ := tm.PatchColumns(tt.args.patchSet)
 			if got != tt.want {
 				t.Errorf("Patcher.Columns() = (%v),  want (%v)", got, tt.want)
 			}
@@ -178,44 +181,46 @@ func TestPatcher_Spanner_Columns(t *testing.T) {
 	}
 }
 
+type PostgresStruct struct {
+	Field1 string `db:"field1"`
+	Field2 string `db:"fieldtwo"`
+	Field3 int    `db:"field3"`
+	Field5 string `db:"field5"`
+	Field4 string `db:"field4"`
+}
+
+func (PostgresStruct) Resource() accesstypes.Resource {
+	return "PostgresStructs"
+}
+
 func TestPatcher_Postgres_Columns(t *testing.T) {
 	t.Parallel()
-	type SpannerStruct struct {
-		Field1 string `db:"field1"`
-		Field2 string `db:"fieldtwo"`
-		Field3 int    `db:"field3"`
-		Field5 string `db:"field5"`
-		Field4 string `db:"field4"`
-	}
 
 	tm := NewPostgresPatcher()
 
 	type args struct {
-		patchSet     *resource.PatchSet
-		databaseType any
+		patchSet *resource.PatchSet
 	}
 	tests := []struct {
 		name string
 		args args
-		want string
+		want Columns
 	}{
 		{
 			name: "multiple fields in patchSet",
 			args: args{
-				patchSet: resource.NewPatchSet().
+				patchSet: resource.NewPatchSet(resource.NewRow[PostgresStruct]()).
 					Set("Field2", "apple").
 					Set("Field3", 10),
-				databaseType: SpannerStruct{},
 			},
 			want: `"fieldtwo", "field3"`,
 		},
 		{
 			name: "multiple fields not in sorted order",
 			args: args{
-				patchSet: resource.NewPatchSet().
+				patchSet: resource.NewPatchSet(resource.NewRow[PostgresStruct]()).
 					Set("Field4", "apple").
 					Set("Field5", "bannana"),
-				databaseType: SpannerStruct{},
 			},
 			want: `"field5", "field4"`,
 		},
@@ -225,7 +230,7 @@ func TestPatcher_Postgres_Columns(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, _ := tm.PatchSetColumns(tt.args.patchSet, tt.args.databaseType)
+			got, _ := tm.PatchColumns(tt.args.patchSet)
 			if got != tt.want {
 				t.Errorf("Patcher.Columns() = (%v),  want (%v)", got, tt.want)
 			}
