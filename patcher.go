@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"cloud.google.com/go/spanner"
 	"github.com/cccteam/ccc"
 	"github.com/cccteam/ccc/accesstypes"
 	"github.com/cccteam/ccc/resource"
@@ -27,6 +28,11 @@ const (
 	postgresdbType dbType = "postgres"
 )
 
+type (
+	Columns string
+	Where   string
+)
+
 type patcher struct {
 	tagName string
 	dbType  dbType
@@ -35,18 +41,42 @@ type patcher struct {
 	cache map[reflect.Type]map[accesstypes.Field]cacheEntry
 }
 
-// QuerySetColumns returns the database struct tags for the fields in databaseType that the user has access to view.
-func (p *patcher) QuerySetColumns(querySet *resource.QuerySet, databaseType any) (string, error) {
-	return p.columns(querySet.Fields(), databaseType)
+func (p *patcher) Stmt(querySet *resource.QuerySet) (spanner.Statement, error) {
+	columns, err := p.QueryColumns(querySet)
+	if err != nil {
+		return spanner.Statement{}, errors.Wrap(err, "SpannerPatcher.Columns()")
+	}
+
+	where, params, err := p.Where(querySet.KeySet(), querySet.Row())
+	if err != nil {
+		return spanner.Statement{}, errors.Wrap(err, "patcher.Where()")
+	}
+
+	stmt := spanner.NewStatement(fmt.Sprintf(`
+			SELECT
+				%s
+			FROM %s 
+			%s`, columns, querySet.Resource(), where,
+	))
+	for param, value := range params {
+		stmt.Params[param] = value
+	}
+
+	return stmt, nil
 }
 
-// PatchSetColumns returns the database struct tags for the field in databaseType if it exists in patchSet.
-func (p *patcher) PatchSetColumns(patchSet *resource.PatchSet, databaseType any) (string, error) {
-	return p.columns(patchSet.Fields(), databaseType)
+// QueryColumns returns the database struct tags for the fields in databaseType that the user has access to view.
+func (p *patcher) QueryColumns(querySet *resource.QuerySet) (Columns, error) {
+	return p.columns(querySet.Fields(), querySet.Row())
+}
+
+// PatchColumns returns the database struct tags for the field in databaseType if it exists in patchSet.
+func (p *patcher) PatchColumns(patchSet *resource.PatchSet) (Columns, error) {
+	return p.columns(patchSet.Fields(), patchSet.Row())
 }
 
 // AllColumns returns the database struct tags for all fields in databaseType.
-func (p *patcher) AllColumns(databaseType any) (string, error) {
+func (p *patcher) AllColumns(databaseType any) (Columns, error) {
 	fieldTagMapping, err := p.get(databaseType)
 	if err != nil {
 		panic(err)
@@ -55,7 +85,7 @@ func (p *patcher) AllColumns(databaseType any) (string, error) {
 	return p.columns(slices.Collect(maps.Keys(fieldTagMapping)), databaseType)
 }
 
-func (p *patcher) columns(fields []accesstypes.Field, databaseType any) (string, error) {
+func (p *patcher) columns(fields []accesstypes.Field, databaseType any) (Columns, error) {
 	fieldTagMapping, err := p.get(databaseType)
 	if err != nil {
 		return "", err
@@ -81,19 +111,19 @@ func (p *patcher) columns(fields []accesstypes.Field, databaseType any) (string,
 
 	switch p.dbType {
 	case spannerdbType:
-		return strings.Join(columns, ", "), nil
+		return Columns(strings.Join(columns, ", ")), nil
 	case postgresdbType:
-		return fmt.Sprintf(`"%s"`, strings.Join(columns, `", "`)), nil
+		return Columns(fmt.Sprintf(`"%s"`, strings.Join(columns, `", "`))), nil
 	default:
 		return "", errors.Newf("unsupported dbType: %s", p.dbType)
 	}
 }
 
 // Where translates the the fields to database struct tags in databaseType when building the where clause
-func (p *patcher) Where(keySet resource.KeySet, databaseType any) (where string, params map[string]any, err error) {
+func (p *patcher) Where(keySet resource.KeySet, databaseType any) (where Where, params map[string]any, err error) {
 	parts := keySet.Parts()
 	if len(parts) == 0 {
-		return "", nil, errors.New("KeySet must include at least one key in call to Where")
+		return "", nil, nil
 	}
 
 	fieldTagMapping, err := p.get(databaseType)
@@ -120,17 +150,17 @@ func (p *patcher) Where(keySet resource.KeySet, databaseType any) (where string,
 		params[strings.ToLower(key)] = part.Value
 	}
 
-	return builder.String()[5:], params, nil
+	return Where("WHERE " + builder.String()[5:]), params, nil
 }
 
 // Resolve returns a map with the keys set to the database struct tags found on databaseType, and the values set to the values in patchSet.
-func (p *patcher) Resolve(patchSet *resource.PatchSet, databaseType any) (map[string]any, error) {
-	keySet := patchSet.KeySet()
+func (p *patcher) Resolve(patchSet *resource.PatchSet) (map[string]any, error) {
+	keySet := patchSet.PrimaryKey()
 	if keySet.Len() == 0 {
 		return nil, errors.New("PatchSet must include at least one primary key in call to Resolve")
 	}
 
-	fieldTagMapping, err := p.get(databaseType)
+	fieldTagMapping, err := p.get(patchSet.Row())
 	if err != nil {
 		return nil, err
 	}
